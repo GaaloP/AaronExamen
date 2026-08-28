@@ -1,0 +1,26 @@
+{
+  "name": "@aaron-examen/back-e2e",
+  "version": "0.0.1",
+  "private": true,
+  "nx": {
+    "implicitDependencies": [
+      "@aaron-examen/back"
+    ],
+    "targets": {
+      "e2e": {
+        "executor": "@nx/jest:jest",
+        "outputs": [
+          "{projectRoot}/test-output/jest/coverage"
+        ],
+        "dependsOn": [
+          "@aaron-examen/back:build",
+          "@aaron-examen/back:serve"
+        ],
+        "options": {
+          "jestConfig": "apps/back-e2e/jest.config.cts",
+          "passWithNoTests": true
+        }
+      }
+    }
+  }
+}
