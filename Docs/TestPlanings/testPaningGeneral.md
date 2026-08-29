@@ -1,4 +1,7 @@
 # Test Planning General
+Creador: Carlos
+Version: v0.1
+Fecha: 29/08/2026
 
 ## Contexto
 
