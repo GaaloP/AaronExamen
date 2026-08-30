@@ -1,5 +1,4 @@
 # suite de Pruebas — Épica: Autenticación y Seguridad
-
 ## 1. Referencia
 
 | Campo | Valor |
@@ -17,8 +16,6 @@ Esta suite de pruebas comprende las HUs Login y Protección de Rutas, no solo co
 
 ## 3. Criterios de entrada
 
-Antes de comenzar a testear es necesario cumplir con los sigFEentes criterios:
-
 - [ ] Cumplimiento de la fase de desarrollo, ya integrado a la branch de pruebas.
 - [ ] Seed de usuarios (con al menos un perfil Agente y un perfil Supervisor) cargado previamente en el entorno de pruebas.
 - [ ] HUs marcadas como "Ready for QA".
@@ -35,7 +32,7 @@ Condiciones específicas de esta suite:
 
 - [ ] 100% de los criterios de aceptación de ambas HUs cubiertos por al menos un caso de prueba (ver matriz de trazabilidad, sección 7).
 - [ ] 0 defectos críticos o altos abiertos relacionados con control de acceso por rol (AC2 de HU Protección de Rutas).
-- [ ] Validación confirmada tanto a nivel de FE como a nivel de API de que un Agente no puede acceder a vistas/endpoints de Supervisor.
+- [ ] Refinamiento de la HU Login
 - [ ] Ambigüedad de numeración duplicada de "AC4" en HU Login (Campo contraseña / Diseño FE / Redirección a dashboard) aclarada y documentada con el PO antes del cierre del suite.
 - [ ] Mensajes de validación y error verificados textualmente contra lo especificado en los AC.
 
@@ -67,8 +64,8 @@ Condiciones específicas de esta suite:
 | HU-Login | AC2 — Validación de credenciales e inicio de sesión | CP-03, CP-04, CP-05, CP-06, CP-07, CP-08, CP-17 |
 | HU-Login | AC3 — Campo correo | CP-09, CP-10, CP-11, CP-17 |
 | HU-Login | AC4 (Campo contraseña) | CP-12, CP-13, CP-14, CP-17 |
-| HU-Login | AC4 (Diseño FE) | CP-15 |
-| HU-Login | AC4 (Redirección a dashboard) | CP-16 |
+| HU-Login | AC5 (Diseño FE) | CP-15 |
+| HU-Login | AC5 (Redirección a dashboard) | CP-16 |
 | HU-Protección de Rutas | AC1 — Redirección a login | CP-18, CP-22 |
 | HU-Protección de Rutas | AC2 — Bloqueo de accesos según rol | CP-19, CP-20, CP-21, CP-23 |
 | Ambas HUs | Revisión de especificación / ambigüedades | CP-01, CP-24 |

@@ -32,10 +32,6 @@ Las condiciones de cierre para cada suite de pruebas están dadas por:
 - El cumplimiento de más del 90% de los casos de prueba de nivel bajo.
 - El cumplimiento del 100% de los casos de prueba con nivel crítico.
 
-## Comunicación
-
-*(Pendiente de definir: canales, frecuencia y responsables de reportar avances/incidencias — por ejemplo, daily de QA, reporte de bugs en [herramienta], escalamiento a BA/SM en caso de bloqueos.)*
-
 ## Priorización de pruebas y gestión de riesgos
 
 En cada suite de pruebas se detallan los casos de prueba agrupados por épica (un documento específico representa un suite de pruebas por cada épica o grupo de HUs). Cada caso de prueba presenta un nivel de prioridad o criticidad, que representa tanto el orden en que se realizará la prueba como la importancia que tiene la sección probada sobre el funcionamiento del producto.
