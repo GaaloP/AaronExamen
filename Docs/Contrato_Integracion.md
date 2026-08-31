@@ -1,5 +1,13 @@
 # Contrato de Integración Examen 2
 
+**Documento redactado por:**
+
+Gael de Jesús Posada Hérnandez
+
+**29/08/2026**
+
+v1.0.0
+
 // Pregunta: si para promedio de resolución solo se van a utilizar status == close, ¿se podría usar en lugar de closedAt, el updatedAt, porque despues de ese último updatedAt ya no habria más cambios a menos que se quite el status == closed, pero si se quita ese, ya no contaría para el promedio. No se pueden editar descripcion y categoria de tickets cerrados?
 // Regla: los catálogos de categoría y estado seran hardcodeados en el front
 // comentario: el id (renombredo como ticketCode) no es un identificador en bd del ticekt, solo es un dato para visualización del usuario
