@@ -2,6 +2,7 @@
   "name": "@aaron-examen/back-e2e",
   "version": "0.0.1",
   "private": true,
+  "type": "module",
   "nx": {
     "implicitDependencies": [
       "@aaron-examen/back"
@@ -17,7 +18,7 @@
           "@aaron-examen/back:serve"
         ],
         "options": {
-          "jestConfig": "apps/back-e2e/jest.config.cts",
+          "jestConfig": "apps/back-e2e/jest.config.ts",
           "passWithNoTests": true
         }
       }
