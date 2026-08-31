@@ -1,4 +1,4 @@
-const nextJest = require('next/jest.js');
+import nextJest from 'next/jest.js';
 
 const createJestConfig = nextJest({
   dir: './',
@@ -17,13 +17,20 @@ const config = {
 
 const jestConfig = createJestConfig(config);
 
-module.exports = async () => {
+export default async () => {
   const resolved = await jestConfig();
+
   // Disable SWC path alias resolution — handled by Nx jest resolver.
-  for (const value of Object.values(resolved.transform)) {
-    if (Array.isArray(value) && value[1]?.resolvedBaseUrl) {
-      value[1] = { ...value[1], resolvedBaseUrl: undefined };
+  if (resolved.transform) {
+    for (const value of Object.values(resolved.transform)) {
+      if (Array.isArray(value) && value[1] && typeof value[1] === 'object') {
+        const transformerConfig = value[1] as { resolvedBaseUrl?: string };
+        if (transformerConfig.resolvedBaseUrl !== undefined) {
+          value[1] = { ...transformerConfig, resolvedBaseUrl: undefined };
+        }
+      }
     }
   }
+
   return resolved;
 };
