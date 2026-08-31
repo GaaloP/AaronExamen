@@ -1,5 +1,45 @@
 # AaronExamen
 
+## Comandos para levantar las apps
+Utilizar estos comandos desde la raiz (`AaronExamen/`) del proyecto
+
+- Levantar la app para desarrollo:
+
+    `npx nx serve back`
+
+    `npx nx dev front`
+- Levantar front y back al mismo tiempo:
+
+    `npx nx run-many --targets=dev,serve --projects=front,back --parallel=2`
+- Ejecutar pruebas unitarias:
+
+    `npx nx test back`
+
+    `npx nx test front`
+- Ejecutar pruebas End-to-End (e2e):
+    
+    `npx nx e2e back-e2e`
+- Ejecutar el linter (revisión de código):
+
+    `npx nx lint back`
+
+    `npx nx lint back-e2e`
+
+    `npx nx lint front`
+- Ejecutar varias apps específicas al mismo tiempo:
+
+    `npx nx run-many -t serve -p front back`
+- Ejecutar un target en TODAS las apps del monorepo:
+
+    `npx nx run-many -t test --all`
+- Compilar para producción (Build)
+
+    `npx nx build back`
+    
+    `npx nx build front`
+
+
+
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
 
 ✨ Your new, shiny [Nx workspace](https://nx.dev) is ready ✨.
