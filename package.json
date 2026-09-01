@@ -2,7 +2,9 @@
   "name": "@aaron-examen/source",
   "version": "0.0.0",
   "license": "MIT",
-  "scripts": {},
+  "scripts": {
+    "seed:users": "ts-node -r tsconfig-paths/register apps/back/src/database/seeds/seed-users.ts"
+  },
   "private": true,
   "devDependencies": {
     "@angular-devkit/core": "^22.1.6",
