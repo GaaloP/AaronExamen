@@ -6,7 +6,7 @@ import {
     ManyToOne,
     PrimaryGeneratedColumn,
 } from 'typeorm';
-import { User } from '../users/user.entity';
+import { User } from '../../users/user.entity';
 
 export enum TicketStatus {
     OPEN = 'open',
@@ -24,6 +24,9 @@ export class Ticket {
 
     @Column()
     category?: string;
+
+    @Column({ type: 'varchar', length: 500, nullable: true })
+    description?: string | null;
 
     @Column({ type: 'enum', enum: TicketStatus, default: TicketStatus.OPEN })
     status?: TicketStatus;
