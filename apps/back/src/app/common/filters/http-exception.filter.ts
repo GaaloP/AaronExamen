@@ -23,13 +23,12 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
             if (status === HttpStatus.BAD_REQUEST) {
                 error = 'Petición inválida';
-                message = 'Los parámetros contienen valores no válidos.';
+                message = typeof res === 'object' && (res as any).message
+                    ? (res as any).message
+                    : 'Los parámetros contienen valores no válidos.';
             } else if (status === HttpStatus.UNAUTHORIZED) {
-                error = 'No autorizado';
-                message =
-                    typeof res === 'object' && (res as any).message
-                        ? (res as any).message
-                        : 'Las credenciales son incorrectas';
+                error = 'No autenticado';
+                message = 'El token de autenticación no fue proporcionado o ha expirado.';
             } else if (typeof res === 'object' && (res as any).message) {
                 message = (res as any).message;
                 error = (res as any).error ?? error;

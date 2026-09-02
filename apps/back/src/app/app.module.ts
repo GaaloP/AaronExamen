@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
+import { TicketsModule } from './tickets/ticket.module';
 
 @Module({
   controllers: [AppController],
@@ -21,10 +22,11 @@ import { AuthModule } from './auth/auth.module';
         password: config.get('DB_PASSWORD'),
         database: config.get('DB_NAME'),
         autoLoadEntities: true,
-        synchronize: true, // solo en desarrollo, nunca en prod
+        synchronize: true,
       }),
     }),
-    AuthModule
+    AuthModule,
+    TicketsModule
   ],
 })
 export class AppModule { }

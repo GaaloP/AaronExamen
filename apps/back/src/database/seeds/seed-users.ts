@@ -25,21 +25,26 @@ async function seedUsers() {
         { fullName: 'Gael Posaderas', email: 'user3@test.com', password: 'user123', role: 'user' },
     ];
 
-    users.map(async (user) => {
-        userRepository.findOne({ where: { email: user.email } })
-            .then(async (existingUser) => {
-                if (!existingUser) {
-                    const hashedPassword = await bcrypt.hash(user.password, 10);
-                    const newUser = {
-                        ...user,
-                        password: hashedPassword
-                    }
-                    await userRepository.save(newUser);
-                } else {
-                    console.log(`User with email ${user.email} already exists.`);
-                }
-            })
-    });
+    for (const user of users) {
+        const existingUser = await userRepository.findOne({ where: { email: user.email } });
+
+        if (existingUser) {
+            console.log(`User with email ${user.email} already exists.`);
+            continue;
+        }
+
+        const hashedPassword = await bcrypt.hash(user.password, 10);
+        const newUser = userRepository.create({
+            ...user,
+            password: hashedPassword,
+        });
+
+        await userRepository.save(newUser);
+        console.log(`Usuario creado: ${user.email}`);
+    }
+
+    await dataSource.destroy();
+    console.log('Seed finalizado.');
 }
 
 seedUsers().catch((err) => {
