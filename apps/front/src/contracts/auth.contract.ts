@@ -51,3 +51,10 @@ export const API_ERRORS: Record<400 | 401 | 500, ApiErrorResponseDto> = {
     message: 'Ocurrió un error inesperado al procesar la solicitud.',
   },
 };
+
+export const AUTH_ROLES = {
+  AGENTE: 'agente',
+  SUPERVISOR: 'supervisor',
+} as const;
+
+export type AuthRole = (typeof AUTH_ROLES)[keyof typeof AUTH_ROLES];
