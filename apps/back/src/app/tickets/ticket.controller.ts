@@ -1,4 +1,4 @@
-import { BadRequestException, Controller, Get, Query, Req, Version, ValidationPipe, UseGuards } from '@nestjs/common';
+import { BadRequestException, Controller, Get, Query, Req, Version, ValidationPipe, UseGuards, Param, ParseUUIDPipe } from '@nestjs/common';
 import type { Request } from 'express';
 import { GetTicketsQueryDto } from './dto/get-tickets-query.dto';
 import { TicketsService } from './ticket.services';
@@ -32,5 +32,16 @@ export class TicketsController {
     ) {
         const currentUser = req.user;
         return this.ticketsService.findAll(query, currentUser);
+    }
+
+    @Get(':id')
+    @Version('1')
+    @UseGuards(JwtGuard)
+    getTicketById(
+        @Param('id', ParseUUIDPipe) id: string,
+        @Req() req: RequestWithUser,
+    ) {
+        const currentUser = req.user;
+        return this.ticketsService.getTicketById(id, currentUser);
     }
 }
