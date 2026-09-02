@@ -38,32 +38,33 @@ export default function LoginForm() {
     const result = await dispatch(loginUser({ email, password }));
 
     if (loginUser.fulfilled.match(result)) {
-      router.push('/dashboard');
+      router.push('/main_screen');
     } else {
       setSnackbarOpen(true);
     }
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: '#7391b8' }}>
-      <Paper component="form" onSubmit={handleSubmit} elevation={0}
-        sx={{ width: 345, p: 4, bgcolor: '#48607d', borderRadius: 2 }}>
-        <Typography variant="h5" fontWeight={700} color="#fff">TiCheck</Typography>
-        <Typography variant="body2" color="#d7dee6" mb={3}>Inicia sesión para continuar</Typography>
+  <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: '#7391b8' }}>
+    <Paper component="form" onSubmit={handleSubmit} elevation={0}
+      sx={{ width: 345, p: 4, bgcolor: '#48607d', borderRadius: 2 }}>
+      <Typography variant="h5" sx={{ fontWeight: 700, color: '#fff' }}>TiCheck</Typography>
+      <Typography variant="body2" sx={{ color: '#d7dee6', mb: 3 }}>Inicia sesión para continuar</Typography>
 
-        <TextField
-          fullWidth placeholder="Correo" value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          error={!!emailError} helperText={emailError}
-          sx={{ mb: 2, bgcolor: '#fff', borderRadius: 1 }}
-        />
+      <TextField
+        fullWidth placeholder="Correo" value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        error={!!emailError} helperText={emailError}
+        sx={{ mb: 2, bgcolor: '#fff', borderRadius: 1 }}
+      />
 
-        <TextField
-          fullWidth placeholder="Password" type={showPassword ? 'text' : 'password'}
-          value={password} onChange={(e) => setPassword(e.target.value)}
-          error={!!passwordError} helperText={passwordError}
-          sx={{ mb: 2, bgcolor: '#fff', borderRadius: 1 }}
-          InputProps={{
+      <TextField
+        fullWidth placeholder="Contraseña" type={showPassword ? 'text' : 'password'}
+        value={password} onChange={(e) => setPassword(e.target.value)}
+        error={!!passwordError} helperText={passwordError}
+        sx={{ mb: 2, bgcolor: '#fff', borderRadius: 1 }}
+        slotProps={{
+          input: {
             endAdornment: (
               <InputAdornment position="end">
                 <IconButton onClick={() => setShowPassword((v) => !v)} edge="end">
@@ -71,8 +72,9 @@ export default function LoginForm() {
                 </IconButton>
               </InputAdornment>
             ),
-          }}
-        />
+          },
+        }}
+      />
 
         <Divider sx={{ borderColor: '#5f7791', my: 2 }} />
 
