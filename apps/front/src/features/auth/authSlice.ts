@@ -3,7 +3,17 @@ import { login, AuthServiceError } from '../../services/auth.service';
 import { AuthUserDto, LoginRequestDto } from '../../contracts/auth.contract';
 
 const SESSION_KEY = 'ticheck_session';
-const SESSION_TTL_MS = 24 * 60 * 60 * 1000; // AC6: 24 horas
+const SESSION_TTL_MS = 24 * 60 * 60 * 1000;
+
+// 👇 nuevo: tipos con nombre en vez de objetos inline en el genérico
+interface LoginFulfilledPayload {
+  accessToken: string;
+  user: AuthUserDto;
+}
+
+interface LoginThunkConfig {
+  rejectValue: string;
+}
 
 interface AuthState {
   accessToken: string | null;
@@ -21,25 +31,24 @@ const initialState: AuthState = {
   errorMessage: null,
 };
 
-export const loginUser = createAsyncThunk
-  { accessToken: string; user: AuthUserDto },
-  LoginRequestDto,
-  { rejectValue: string }
->('auth/login', async (credentials, { rejectWithValue }) => {
-  try {
-    const response = await login(credentials);
-    return { accessToken: response.data.accessToken, user: response.data.user };
-  } catch (err) {
-    if (err instanceof AuthServiceError) {
-      const message =
-        err.statusCode === 401
-          ? 'El usuario o contraseña es incorrecto, intente de nuevo'
-          : err.message;
-      return rejectWithValue(message);
+export const loginUser = createAsyncThunk<LoginFulfilledPayload, LoginRequestDto, LoginThunkConfig>(
+  'auth/login',
+  async (credentials, { rejectWithValue }) => {
+    try {
+      const response = await login(credentials);
+      return { accessToken: response.data.accessToken, user: response.data.user };
+    } catch (err) {
+      if (err instanceof AuthServiceError) {
+        const message =
+          err.statusCode === 401
+            ? 'El usuario o contraseña es incorrecto, intente de nuevo'
+            : err.message;
+        return rejectWithValue(message);
+      }
+      return rejectWithValue('Ocurrió un error inesperado');
     }
-    return rejectWithValue('Ocurrió un error inesperado');
   }
-});
+);
 
 const authSlice = createSlice({
   name: 'auth',
