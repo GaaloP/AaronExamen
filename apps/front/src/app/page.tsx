@@ -1,7 +1,5 @@
+import { redirect } from 'next/navigation';
+
 export default function Index() {
-  return (
-    <h1 className="text-3xl font-bold underline p-200">
-      Hello world!
-    </h1>
-  )
+  redirect('/login');
 }
