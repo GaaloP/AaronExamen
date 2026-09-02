@@ -35,15 +35,15 @@ export class Ticket {
     @Column({ type: 'varchar', length: 500 })
     description!: string;
     
-    @ManyToOne(() => User, { nullable: false })
+    @ManyToOne(() => User)
     @JoinColumn({ name: 'assignedToUuid' })
     assignedTo!: User;
 
     @CreateDateColumn()
     createdAt!: Date;
 
-    @ManyToOne(() => User, { nullable: false })
-    @JoinColumn({ name: 'assignedToUuid' })
+    @ManyToOne(() => User)
+    @JoinColumn({ name: 'createdByUuid' })
     createdBy!: User;
 
     @Column({ type: 'enum', enum: TicketStatus, default: TicketStatus.OPEN })
