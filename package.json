@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "seed:users": "ts-node -r tsconfig-paths/register apps/back/src/database/seeds/seed-users.ts"
+    "seed:users": "TS_NODE_PROJECT=apps/back/tsconfig.app.json ts-node --transpile-only -r tsconfig-paths/register apps/back/src/database/seeds/seed-users.ts"
   },
   "private": true,
   "devDependencies": {
