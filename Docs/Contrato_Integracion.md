@@ -6,16 +6,15 @@ Gael de Jesús Posada Hérnandez
 
 **29/08/2026**
 
-v1.0.0
-
-// Pregunta: si para promedio de resolución solo se van a utilizar status == close, ¿se podría usar en lugar de closedAt, el updatedAt, porque despues de ese último updatedAt ya no habria más cambios a menos que se quite el status == closed, pero si se quita ese, ya no contaría para el promedio. No se pueden editar descripcion y categoria de tickets cerrados?
-// Regla: los catálogos de categoría y estado seran hardcodeados en el front
-// comentario: el id (renombredo como ticketCode) no es un identificador en bd del ticekt, solo es un dato para visualización del usuario
-//pregunta: un agente puede reabrir un ticket que habia sido asignado a él?
+v1.0.1
 
 ## HU01 Lista de tickets
 
 ### Visualizar los tickets paginados y con filtro (Agente con restricciones, Supervisor)
+
+**Regla de negocia**
+
+El `ticketCode` no es un identificador en bd del ticekt, solo es un dato para visualización del usuario
 
 **Método y ruta:**
 
@@ -355,8 +354,10 @@ Cuando ocurre un error general del servidor.
 ### Subir nuevo Ticket
 
 **Regla de negocio:**
-Si es creado por un agente, no se incluye el uuid en el body, se toma del token.
-Si es un supervisor si debe incluir el uuid.
+
+Si es creado por un agente, no se incluye el `assignedToUuid` en el body, se toma del token. Si es un supervisor si debe incluir el `assignedToUuid`.
+
+El `ticketCode` no es un identificador en bd del ticekt, solo es un dato para visualización del usuario
 
 **Método y ruta:**
 
