@@ -6,16 +6,15 @@ Gael de Jesús Posada Hérnandez
 
 **29/08/2026**
 
-v1.0.0
-
-// Pregunta: si para promedio de resolución solo se van a utilizar status == close, ¿se podría usar en lugar de closedAt, el updatedAt, porque despues de ese último updatedAt ya no habria más cambios a menos que se quite el status == closed, pero si se quita ese, ya no contaría para el promedio. No se pueden editar descripcion y categoria de tickets cerrados?
-// Regla: los catálogos de categoría y estado seran hardcodeados en el front
-// comentario: el id (renombredo como ticketCode) no es un identificador en bd del ticekt, solo es un dato para visualización del usuario
-//pregunta: un agente puede reabrir un ticket que habia sido asignado a él?
+v1.0.3
 
 ## HU01 Lista de tickets
 
-### Visualizar los tickets paginados y con filtro (Agente con restricciones, Supervisor)
+### Visualizar los tickets paginados y con filtro (Agente con restriccion, Supervisor total)
+
+**Regla de negocia**
+
+El `ticketCode` no es un identificador en bd del ticekt, solo es un dato para visualización del usuario
 
 **Método y ruta:**
 
@@ -40,26 +39,20 @@ El endpoint no contiene body.
 Cuando la operación es exitosa
 ```json
 {
-  "statusCode": 200,
-  "data": [
+  "tickets": [
     {
-      "uuid": "string",
-      "ticketCode": "number",
-      "category": "string",
-      "status": "string",
-      "assignedTo": {
-				"uuid": "string",
-				"fullName": "string"
-			}
+      "uuid": "string (uuid)",
+      "ticketCode": "int",
+      "category": "string (enum Category)",
+      "status": "string (enum Status)",
+      "assignedTo": "string (user.fullName)",			
     }
   ],
-  "meta": {
-    "total": "number",
-    "page": "number",
-    "limit": "number",
-    "totalPages": "number",
-    "hasPrevPage": "bool",
-    "hasNextPage": "bool"
+  "pagination": {
+    "totalTickets": "int",
+    "ticketsCount": "int",
+    "currentPage": "int",
+    "ticketsPerPage": "int"
   }
 }
 ```
@@ -97,7 +90,7 @@ Cuando ocurre un error general del servidor.
 }
 ```
 
-## HU02 Detalle del ticket e historial
+## HU02 Detalle de ticket e historial
 
 ### Visualizar detalle del ticket e historial
 
@@ -118,30 +111,21 @@ Este endpoint no contiene body.
 Cuando la operación es exitosa
 ```json
 {
-  "statusCode": 200,
-  "data": {
-    "uuid": "string",
-    "ticketCode": "number",
-    "category": "string",
+  "ticket": {
+    "uuid": "string (uuid)",
+    "ticketCode": "int",
+    "category": "string (enum Category)",
 		"description": "string",
-    "assignedTo": {
-			"uuid": "string",
-			"fullName": "string"
-		},
-    "createdAt": "string (ISO 8601)",
-    "updatedAt": "string (ISO 8601)",
-    "status": "string",
+    "assignedTo": "string (user.fullName)",
+    "status": "string (enum Status)",
     "history": [
       {
         "date": "string (ISO 8601)",
-        "updatedBy": {
-          "uuid": "string",
-          "fullName": "string"
-        },
+        "editedBy": "string (user.fullName)", 
         "field": "string",
         "prevValue": "string",
         "newValue": "string",
-        "comment": "string"
+        "comment?": "string"
       }
     ]
   }
@@ -203,6 +187,79 @@ Cuando ocurre un error general del servidor.
 }
 ```
 
+### Visualizar catálogo de agentes (para asignar y reasignar en un ticket)
+
+**Método y ruta:**
+
+`GET /api/v1/agents/`
+
+**Headers:**
+
+- Authorization: Bearer `<token>`
+
+**Body:**
+
+Este endpoint no contiene body.
+
+**Response 200:**
+
+Cuando la operación es exitosa
+
+```json
+{
+  "agents": [
+    {
+      "uuid": "string (uuid)",
+      "fullName": "string"
+    }
+  ]
+}
+```
+
+**Response 400:**
+
+Cuando la url contiene query params
+```json
+{
+  "statusCode": 400,
+  "error": "Petición inválida",
+  "message": "Los parámetros contienen valores no válidos."
+}
+```
+
+**Response 401:**
+
+Cuando el token no existe, está caducado, o tiene formato incorrecto
+```json
+{
+  "statusCode": 401,
+  "error": "No autorizado",
+  "message": "El token de autenticación no fue proporcionado o ha expirado."
+}
+```
+
+**Response 403:**
+
+Cuando es un agente intentando acceder al endpoint
+```json
+{
+  "statusCode": 403,
+  "error": "Acceso denegado",
+  "message": "No cuentas con los permisos necesarios para acceder a este recurso."
+}
+```
+
+**Response 500:**
+
+Cuando ocurre un error general del servidor.
+```json
+{
+  "statusCode": 500,
+  "error": "Error interno del servidor",
+  "message": "Ocurrió un error inesperado al procesar la solicitud."
+}
+```
+
 ## HU03 Dashboard de métricas
 
 ### Visualizar información de métricas
@@ -224,12 +281,12 @@ Este endpoint no contiene body.
 Cuando la operación es exitosa
 ```json
 {
-  "statusCode": 200,
-  "data": {
-    "openedTicketsCount": "number",
-    "inProgressTicketsCount": "number",
-    "closedTicketsCount": "number",
-    "averageSolutionTime": "number"
+  
+  "metricData": {
+    "openedTicketsCount": "int",
+    "inProgressTicketsCount": "int",
+    "closedTicketsCount": "int",
+    "averageSolutionTime": "int"
   }
 }
 ```
@@ -304,14 +361,13 @@ Cuando ocurre un error general del servidor.
 Cuando la operación es exitosa
 ```json
 {
-  "message": "Login successful",
-  "data": {
+  "logionData": {
     "accessToken": "string",
-    "expiresIn": "number",
+    "expiresIn": "int",
     "user": {
       "role": "string",
       "fullName": "string",
-      "uuid": "string"
+      "uuid": "string (uuid)",
     }
   }
 }
@@ -350,13 +406,15 @@ Cuando ocurre un error general del servidor.
 }
 ```
 
-## HU Creación de Tickets
+## HU06 Creación de Tickets
 
 ### Subir nuevo Ticket
 
 **Regla de negocio:**
-Si es creado por un agente, no se incluye el uuid en el body, se toma del token.
-Si es un supervisor si debe incluir el uuid.
+
+Si es creado por un agente, no se incluye el `assignedToUuid` en el body, se toma del token. Si es un supervisor si debe incluir el `assignedToUuid`.
+
+El `ticketCode` no es un identificador en bd del ticekt, solo es un dato para visualización del usuario
 
 **Método y ruta:**
 
@@ -371,9 +429,9 @@ Si es un supervisor si debe incluir el uuid.
 
 ```json
 {
-  "category": "string",
+  "category": "string (enum Category)",
   "description": "string",
-  "assignedToUuid?": "string"
+  "assignedToUuid?": "string (uuid)"
 }
 ```
 
@@ -384,21 +442,14 @@ Registro creado con éxito
 {
   "statusCode": 201,
   "data": {
-    "uuid": "string",
+    "uuid": "string (uuid)",
     "ticketCode": "string",
-    "category": "string",
+    "category": "string (enum Category)",
     "description": "string",
-		"assignedTo": {
-			"uuid": "string",
-			"fullName": "string"
-		},
+		"assignedTo": "string (user.fullName)",
 		"createdAt": "string (ISO 8601)",
-    "createdBy": {
-      "uuid": "string",
-      "fullName": "string"
-    },
-		"updatedAt": "string (ISO 8601)",
-		"status": "string",
+    "createdBy": "string (user.fullName)",
+		"status": "string (enum Status)",
     "closedAt": "string (ISO 8601)",
   }
 }
@@ -459,79 +510,6 @@ Cuando ocurre un error general del servidor.
 }
 ```
 
-### Visualizar catálogo de agentes (para asignar en un ticket)
-
-**Método y ruta:**
-
-`GET /api/v1/agents/`
-
-**Headers:**
-
-- Authorization: Bearer `<token>`
-
-**Body:**
-
-Este endpoint no contiene body.
-
-**Response 200:**
-
-Cuando la operación es exitosa
-```json
-{
-  "statusCode": 200,
-  "data": [
-    {
-      "uuid": "string",
-      "fullName": "string"
-    }
-  ]
-}
-```
-
-**Response 400:**
-
-Cuando la url contiene query params
-```json
-{
-  "statusCode": 400,
-  "error": "Petición inválida",
-  "message": "Los parámetros contienen valores no válidos."
-}
-```
-
-**Response 401:**
-
-Cuando el token no existe, está caducado, o tiene formato incorrecto
-```json
-{
-  "statusCode": 401,
-  "error": "No autorizado",
-  "message": "El token de autenticación no fue proporcionado o ha expirado."
-}
-```
-
-**Response 403:**
-
-Cuando es un agente intentando acceder al endpoint
-```json
-{
-  "statusCode": 403,
-  "error": "Acceso denegado",
-  "message": "No cuentas con los permisos necesarios para acceder a este recurso."
-}
-```
-
-**Response 500:**
-
-Cuando ocurre un error general del servidor.
-```json
-{
-  "statusCode": 500,
-  "error": "Error interno del servidor",
-  "message": "Ocurrió un error inesperado al procesar la solicitud."
-}
-```
-
 ## HU Edición de tickets
 
 ### Editar datos del ticket
@@ -551,7 +529,7 @@ Cuando ocurre un error general del servidor.
 {
   "category?": "string",
   "description?": "string",
-	"assignedToUuid?": "string",
+	"assignedToUuid?": "string (uuid)",
   "comment?": "string"
 }
 ```
@@ -561,24 +539,15 @@ Cuando ocurre un error general del servidor.
 Cuando la operación es exitosa
 ```json
 {
-  "statusCode": 200,
-  "data": {
-    "uuid": "string",
-    "ticketCode": "number",
-    "category": "string",
+  "editedTicket": {
+    "uuid": "string (uuid)",
+    "ticketCode": "int",
+    "category": "string (enum Category)",
     "description": "string",
-    "assignedTo": {
-			"uuid": "sting",
-			"fullName": "string"
-		},
+    "assignedTo": "string (user.fullName)",
     "createdAt": "string (ISO 8601)",
-    "createdBy": "string",
-    "updatedAt": "string (ISO 8601)",
-    "updatedBy": {
-			"uuid": "string",
-      "fullName": "string"
-    },
-		"status": "string",
+    "createdBy":"string (user.fullName)",
+		"status": "string (enum Status)",
     "closedAt": "string (ISO 8601)"
   }
 }
@@ -673,7 +642,7 @@ En progreso -> Abierto
 
 ```json
 {
-  "status": "string",
+  "status": "string (enum Status)",
   "comment?": "string"
 }
 ```
@@ -683,21 +652,16 @@ En progreso -> Abierto
 Cuando la operación es exitosa
 ```json
 {
-  "statusCode": 200,
-  "data": {
-    "uuid": "string",
-    "ticketCode": "number",
-    "category": "string",
+  
+  "editedTicket": {
+    "uuid": "string (uuid)",
+    "ticketCode": "int",
+    "category": "string (enum Category)",
     "description": "string",
-    "assignedTo": "string",
+    "assignedTo": "string (user.fullName)",
     "createdAt": "string (ISO 8601)",
-    "createdBy": "string",
-    "updatedAt": "string (ISO 8601)",
-    "updatedBy": {
-			"uuid": "string",
-      "fullName": "string"
-    },
-		"status": "string",
+    "createdBy": "string (user.fullName)",
+		"status": "string (enum Status)",
     "closedAt": "string (ISO 8601)"
   }
 }
@@ -727,7 +691,7 @@ Cuando el token no existe, está caducado, o tiene formato incorrecto
 
 **Response 403:**
 
-Cuando un agente intenta editar status de tickets que no tiene asignado.
+Cuando un agente intenta editar status de tickets que no tiene asignado o reabrir un ticket que ya estaba cerrado.
 ```json
 {
   "statusCode": 403,
@@ -749,7 +713,7 @@ Cuando la url contiene un uuid que no existe en la db
 
 **Response 409:**
 
-Cuando el estatus intenta psar de abierto a cerrado o de cerrado a abierto.
+Cuando el estatus intenta pasar de abierto a cerrado o de cerrado a abierto.
 ```json
 {
   "statusCode": 409,
