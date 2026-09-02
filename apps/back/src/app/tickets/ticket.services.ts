@@ -1,15 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Ticket } from './entities/ticket.entity';
+import { Ticket, TicketStatus } from './entities/ticket.entity';
 import { GetTicketsQueryDto } from './dto/get-tickets-query.dto';
 import { History } from './entities/history.entity';
+import { EditStatusDto } from './dto/edit-state.dto';
+import { AuthenticatedUser } from './dto/autenticated-user.dto';
 
-interface AuthenticatedUser {
-    uuid: string;
-    email: string;
-    role: string;
-}
 
 @Injectable()
 export class TicketsService {
@@ -30,7 +27,8 @@ export class TicketsService {
             qb.andWhere('ticket.status = :status', { status: query.status });
         }
 
-        if (currentUser.role?.toLowerCase() === 'agente') {
+        // Agentes solo ven sus propios tickets
+        if (currentUser.role?.toLowerCase() === 'user') {
             qb.andWhere('assignedTo.uuid = :agentUuid', { agentUuid: currentUser.uuid });
         }
         qb.orderBy('ticket.openAt', 'DESC')
@@ -78,7 +76,8 @@ export class TicketsService {
             };
         }
 
-        if (currentUser.role?.toLowerCase() === 'agente') {
+        // Agentes solo pueden ver tickets asignados a ellos
+        if (currentUser.role?.toLowerCase() === 'user') {
             if (ticket.assignedTo?.uuid !== currentUser.uuid) {
                 return {
                     statusCode: 403,
@@ -122,5 +121,100 @@ export class TicketsService {
                 })),
             },
         };
+    }
+
+    async editstatus(id: string, payload: EditStatusDto, currentUser: AuthenticatedUser) {
+        // Obtener el ticket actual
+        const ticket = await this.ticketRepository
+            .createQueryBuilder('ticket')
+            .leftJoinAndSelect('ticket.assignedTo', 'assignedTo')
+            .where('ticket.uuid = :id', { id })
+            .getOne();
+
+        // Validar que el ticket existe
+        if (!ticket) {
+            return {
+                statusCode: 404,
+                error: 'No encontrado',
+                message: `El ticket con uuid ${id} no existe.`,
+            };
+        }
+
+        // Validar permisos: agentes solo pueden editar sus propios tickets
+        if (currentUser.role?.toLowerCase() === 'user') {
+            if (ticket.assignedTo?.uuid !== currentUser.uuid) {
+                return {
+                    statusCode: 403,
+                    error: 'Acceso denegado',
+                    message: 'No cuentas con los permisos necesarios para crear este recurso.',
+                };
+            }
+        }
+
+        // Validar transiciones de estado según regla de negocio
+        const validTransitions: Record<TicketStatus, TicketStatus[]> = {
+            [TicketStatus.OPEN]: [TicketStatus.IN_PROGRESS],
+            [TicketStatus.IN_PROGRESS]: [TicketStatus.CLOSED],
+            [TicketStatus.CLOSED]: [],
+        };
+
+        const currentStatus = ticket.status as TicketStatus;
+        const newStatus = payload.status as TicketStatus;
+
+        if (!validTransitions[currentStatus]?.includes(newStatus)) {
+            return {
+                statusCode: 409,
+                error: 'Conflicto de registro',
+                message: 'No se pudo editar estado porque no se cumple con la regla de transiciones',
+            };
+        }
+
+        try {
+            // Actualizar solo el status del ticket
+            await this.ticketRepository
+                .createQueryBuilder('ticket')
+                .update()
+                .set({
+                    status: newStatus,
+                    closedAt: newStatus === TicketStatus.CLOSED ? new Date() : null
+                })
+                .where('uuid = :id', { id })
+                .execute();
+
+            // Registrar en historial
+            const historyEntry = this.historyRepository.create({
+                date: new Date(),
+                modifierUser: { uuid: currentUser.uuid } as any,
+                ticketUuid: id,
+                lasState: currentStatus,
+                actualState: newStatus,
+                comment: payload.comment || 'status updated',
+            });
+
+            await this.historyRepository.save(historyEntry);
+
+            // Retornar ticket actualizado
+            return {
+                statusCode: 200,
+                editedTicket: {
+                    uuid: ticket.uuid,
+                    ticketCode: ticket.ticketCode,
+                    category: ticket.category,
+                    description: ticket.description,
+                    assignedTo: ticket.assignedTo?.fullName || null,
+                    createdAt: ticket.openAt,
+                    createdBy: ticket.assignedTo?.fullName || null,
+                    status: newStatus,
+                    closedAt: newStatus === TicketStatus.CLOSED ? new Date().toISOString() : '',
+                },
+            };
+
+        } catch (error) {
+            return {
+                statusCode: 500,
+                error: 'Error interno del servidor',
+                message: 'Ocurrió un error inesperado al procesar la solicitud.',
+            };
+        }
     }
 }
