@@ -282,7 +282,7 @@ Cuando la operación es exitosa
 ```json
 {
   
-  "mwtricData": {
+  "metricData": {
     "openedTicketsCount": "int",
     "inProgressTicketsCount": "int",
     "closedTicketsCount": "int",
