@@ -1,6 +1,6 @@
 import { DataSource } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { User } from '../../app/users/user.entity';
+import { User, UserRole } from '../../app/users/user.entity';
 import 'dotenv/config';
 
 const dataSource = new DataSource({
@@ -19,10 +19,10 @@ async function seedUsers() {
     const userRepository = dataSource.getRepository(User);
     const users = [
 
-        { fullName: 'Carlitos Su Papa', email: 'admin@test.com', password: 'admin123', role: 'admin' },
-        { fullName: 'Valer IA', email: 'user1@test.com', password: 'user123', role: 'user' },
-        { fullName: 'Chris Chan', email: 'user2@test.com', password: 'user123', role: 'user' },
-        { fullName: 'Gael Posaderas', email: 'user3@test.com', password: 'user123', role: 'user' },
+        { fullName: 'Carlitos Su Papa', email: 'admin@test.com', password: 'admin123'},
+        { fullName: 'Valer IA', email: 'user1@test.com', password: 'user123' },
+        { fullName: 'Chris Chan', email: 'user2@test.com', password: 'user123', role: UserRole.SUPERVISOR },
+        { fullName: 'Gael Posaderas', email: 'user3@test.com', password: 'user123', role: UserRole.SUPERVISOR },
     ];
 
     for (const user of users) {
@@ -37,6 +37,7 @@ async function seedUsers() {
         const newUser = userRepository.create({
             ...user,
             password: hashedPassword,
+            role: UserRole.AGENT,
         });
 
         await userRepository.save(newUser);

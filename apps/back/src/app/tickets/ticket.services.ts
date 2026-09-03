@@ -105,8 +105,7 @@ export class TicketsService {
                     uuid: ticket.assignedTo.uuid,
                     fullName: ticket.assignedTo.fullName,
                 } : null,
-                createdAt: ticket.openAt,
-                updatedAt: ticket.closedAt ?? ticket.openAt,
+                createdAt: ticket.createdAt,
                 status: ticket.status,
                 history: history.map((h) => ({
                     date: h.date,
