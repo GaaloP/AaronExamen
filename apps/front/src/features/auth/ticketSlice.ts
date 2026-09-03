@@ -1,4 +1,7 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { getAgents, createTicket as createTicketService, TicketServiceError } from '../../services/tickets.service';
+import { AgentDto, CreateTicketRequestDto } from '../../contracts/tickets.contract';
+
 export interface TicketHistory {
   date: string;
   updatedBy: { uuid: string; fullName: string };
@@ -8,13 +11,23 @@ export interface TicketHistory {
   comment: string;
 }
 
+export interface TicketPerson {
+  uuid: string;
+  fullName: string;
+}
+
 export interface Ticket {
   uuid: string;
   ticketCode: string;
   category: string;
   status: string;
-  assignedTo: { uuid: string; fullName: string } | null;
+  assignedTo: TicketPerson | null;
   history: TicketHistory[];
+  description?: string;
+  createdBy?: TicketPerson;
+  createdAt?: string;
+  updatedAt?: string;
+  closedAt?: string | null;
 }
 
 export interface TicketState {
@@ -23,6 +36,10 @@ export interface TicketState {
   filter: string;
   page: number;
   limit: number;
+  agentsCatalog: AgentDto[];
+  agentsStatus: 'idle' | 'loading' | 'failed';
+  createStatus: 'idle' | 'loading' | 'failed';
+  createErrorMessage: string | null;
 }
 
 const initialTickets: Ticket[] = [
@@ -33,15 +50,15 @@ const initialTickets: Ticket[] = [
     status: 'Abierto',
     assignedTo: { uuid: 'USR-001', fullName: 'Juan Pérez' },
     history: [
-      { 
-        date: '2023-10-25 10:00', 
-        updatedBy: { uuid: 'USR-000', fullName: 'Admin' }, 
-        field: 'status', 
-        prevValue: 'Nuevo', 
-        newValue: 'Abierto', 
-        comment: 'Asignado a Juan' 
-      }
-    ]
+      {
+        date: '2023-10-25 10:00',
+        updatedBy: { uuid: 'USR-000', fullName: 'Admin' },
+        field: 'status',
+        prevValue: 'Nuevo',
+        newValue: 'Abierto',
+        comment: 'Asignado a Juan',
+      },
+    ],
   },
   {
     uuid: 'TCK-002',
@@ -49,7 +66,7 @@ const initialTickets: Ticket[] = [
     category: 'Infraestructura',
     status: 'En progreso',
     assignedTo: { uuid: 'USR-002', fullName: 'María López' },
-    history: []
+    history: [],
   },
   {
     uuid: 'TCK-003',
@@ -57,17 +74,61 @@ const initialTickets: Ticket[] = [
     category: 'Software',
     status: 'Cerrado',
     assignedTo: null,
-    history: []
-  }
+    history: [],
+  },
 ];
 
 const initialState: TicketState = {
   list: initialTickets,
-  selectedTicket: null, // Guarda el ticket activo para vistas de detalle 
+  selectedTicket: null,
   filter: 'Todos',
-  page: 0,      // la pagina actual pq mui usa indice cero
-  limit: 5      // límite de elementos por página
+  page: 0,
+  limit: 5,
+  agentsCatalog: [],
+  agentsStatus: 'idle',
+  createStatus: 'idle',
+  createErrorMessage: null,
 };
+
+export const fetchAgents = createAsyncThunk('tickets/fetchAgents', async () => {
+  return await getAgents();
+});
+
+interface CreateTicketArgs {
+  dto: CreateTicketRequestDto;
+  currentUser: { uuid: string; fullName: string; role: string };
+}
+
+interface CreateTicketThunkConfig {
+  rejectValue: string;
+}
+
+export const createTicket = createAsyncThunk<Ticket, CreateTicketArgs, CreateTicketThunkConfig>(
+  'tickets/create',
+  async ({ dto, currentUser }, { rejectWithValue }) => {
+    try {
+      const created = await createTicketService(dto, currentUser);
+      return {
+        uuid: created.uuid,
+        ticketCode: created.ticketCode,
+        category: created.category,
+        status: created.status,
+        assignedTo: created.assignedTo,
+        history: [],
+        description: created.description,
+        createdBy: created.createdBy,
+        createdAt: created.createdAt,
+        updatedAt: created.updatedAt,
+        closedAt: created.closedAt,
+      };
+    } catch (err) {
+      if (err instanceof TicketServiceError) {
+        return rejectWithValue(err.message);
+      }
+      return rejectWithValue('Ocurrió un error inesperado');
+    }
+  }
+);
 
 const ticketSlice = createSlice({
   name: 'tickets',
@@ -75,7 +136,7 @@ const ticketSlice = createSlice({
   reducers: {
     setFilter: (state, action: PayloadAction<string>) => {
       state.filter = action.payload;
-      state.page = 0; // reinicia a la primera página al cambiar filtro
+      state.page = 0;
     },
     setPage: (state, action: PayloadAction<number>) => {
       state.page = action.payload;
@@ -84,24 +145,53 @@ const ticketSlice = createSlice({
       state.limit = action.payload;
       state.page = 0;
     },
-   
     setSelectedTicketByUuid: (state, action: PayloadAction<string>) => {
       const found = state.list.find((ticket) => ticket.uuid === action.payload);
       state.selectedTicket = found || null;
     },
-    
     clearSelectedTicket: (state) => {
-      state.selectedTicket = null; // esto limpia la selección al salir de la vista de detalle
-    }
-  }
+      state.selectedTicket = null;
+    },
+    resetCreateStatus: (state) => {
+      state.createStatus = 'idle';
+      state.createErrorMessage = null;
+    },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchAgents.pending, (state) => {
+        state.agentsStatus = 'loading';
+      })
+      .addCase(fetchAgents.fulfilled, (state, action) => {
+        state.agentsStatus = 'idle';
+        state.agentsCatalog = action.payload;
+      })
+      .addCase(fetchAgents.rejected, (state) => {
+        state.agentsStatus = 'failed';
+      })
+      .addCase(createTicket.pending, (state) => {
+        state.createStatus = 'loading';
+        state.createErrorMessage = null;
+      })
+      .addCase(createTicket.fulfilled, (state, action) => {
+        state.createStatus = 'idle';
+        state.list.unshift(action.payload); // aparece de primero en el listado
+        state.page = 0;
+      })
+      .addCase(createTicket.rejected, (state, action) => {
+        state.createStatus = 'failed';
+        state.createErrorMessage = action.payload ?? 'Ocurrió un error inesperado';
+      });
+  },
 });
 
-export const { 
-  setFilter, 
-  setPage, 
-  setLimit, 
-  setSelectedTicketByUuid, 
-  clearSelectedTicket 
+export const {
+  setFilter,
+  setPage,
+  setLimit,
+  setSelectedTicketByUuid,
+  clearSelectedTicket,
+  resetCreateStatus,
 } = ticketSlice.actions;
 
 export default ticketSlice.reducer;
