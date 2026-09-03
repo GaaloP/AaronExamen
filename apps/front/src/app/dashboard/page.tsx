@@ -4,8 +4,7 @@ import { useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { 
-  Box, Typography, List, ListItemButton, ListItemIcon, ListItemText,
-  Paper, Grid, Card, CardContent
+  Box, Typography, List, ListItemButton, ListItemIcon, ListItemText, Grid, Card, CardContent
 } from '@mui/material';
 import GridViewIcon from '@mui/icons-material/GridView';
 import EventNoteIcon from '@mui/icons-material/EventNote';

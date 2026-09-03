@@ -2,10 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Ticket, TicketStatus } from './entities/ticket.entity';
-import { GetTicketsQueryDto } from './dto/get-tickets-query.dto';
 import { History } from './entities/history.entity';
-import { EditStatusDto, EditTicketDto } from './dto/edit-state.dto';
-import { AuthenticatedUser } from './dto/autenticated-user.dto';
+import type { GetPaginatedTicketsDto } from './dto/get-tickets-query.dto';
+import type { AuthenticatedUser } from '../auth/authenticated-user.interface';
+import type { EditStatusDto } from './dto/edit-ticket-status.dto';
+import type { EditTicketDto } from './dto/edit-ticket.dto';
 
 
 @Injectable()
@@ -15,7 +16,7 @@ export class TicketsService {
         @InjectRepository(History) private historyRepository: Repository<History>,
     ) { }
 
-    async findAll(query: GetTicketsQueryDto, currentUser: AuthenticatedUser) {
+    async findAll(query: GetPaginatedTicketsDto, currentUser: AuthenticatedUser) {
         const page = query.page ?? 1;
         const limit = query.limit ?? 10;
 
@@ -201,7 +202,7 @@ export class TicketsService {
                     category: ticket.category,
                     description: ticket.description,
                     assignedTo: ticket.assignedTo?.fullName || null,
-                    createdAt: ticket.openAt,
+                    createdAt: ticket.createdAt,
                     createdBy: ticket.assignedTo?.fullName || null,
                     status: newStatus,
                     closedAt: newStatus === TicketStatus.CLOSED ? new Date().toISOString() : '',
@@ -260,7 +261,7 @@ export class TicketsService {
                 category: ticketActualizado?.category,
                 description: ticketActualizado?.description,
                 assignedTo: ticketActualizado?.assignedTo?.fullName || null,
-                createdAt: ticketActualizado?.openAt,
+                createdAt: ticketActualizado?.createdAt,
                 createdBy: ticketActualizado?.assignedTo?.fullName || null,
                 status: ticketActualizado?.status,
                 closedAt: ticketActualizado?.closedAt
