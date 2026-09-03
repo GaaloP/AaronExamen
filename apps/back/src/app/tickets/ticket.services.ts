@@ -220,6 +220,38 @@ export class TicketsService {
 
     async editTicket(id: string, payload: EditTicketDto, currentUser: AuthenticatedUser) {
         const ticket = await this.ticketRepository
+            .createQueryBuilder('ticket')
+            .leftJoinAndSelect('ticket.assignedTo', 'assignedTo')
+            .where('ticket.uuid = :id', { id })
+            .getOne();
+
+        if (!ticket) {
+            return {
+                statusCode: 404,
+                error: 'No encontrado',
+                message: `El ticket con uuid ${id} no existe.`,
+            };
+        }
+
+        if (currentUser.role?.toLowerCase() === 'user') {
+            if (ticket.assignedTo?.uuid !== currentUser.uuid) {
+                return {
+                    statusCode: 403,
+                    error: 'Acceso denegado',
+                    message: 'No cuentas con los permisos necesarios para crear este recurso.',
+                };
+            }
+
+            if (payload.assignedToUuid && payload.assignedToUuid !== currentUser.uuid) {
+                return {
+                    statusCode: 403,
+                    error: 'Acceso denegado',
+                    message: 'No cuentas con los permisos necesarios para crear este recurso.',
+                };
+            }
+        }
+
+        const ticketUpdateResult = await this.ticketRepository
             .createQueryBuilder()
             .update(Ticket)
             .set({
@@ -229,7 +261,7 @@ export class TicketsService {
             })
             .where('uuid = :id', { id })
             .execute();
-        if (ticket.affected === 0) {
+        if (ticketUpdateResult.affected === 0) {
             return {
                 statusCode: 404,
                 error: 'No encontrado',

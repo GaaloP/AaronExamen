@@ -16,6 +16,7 @@ module.exports = {
   transform: {
     '^.+\\.[tj]s$': ['@swc/jest', swcJestConfig],
   },
+  transformIgnorePatterns: ['/node_modules/(?!(?:@nestjs/typeorm|typeorm|@nestjs/jwt|jsonwebtoken)/)'],
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: 'test-output/jest/coverage',
 };

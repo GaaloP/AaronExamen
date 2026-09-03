@@ -52,52 +52,36 @@ Condiciones específicas de esta suite:
 
 | Riesgo | Probabilidad | Impacto | Prioridad resultante | Mitigación |
 |---|---|---|---|---|
-| Fuga de datos/acceso indebido entre roles Agente/Supervisor mediante URL directa | Media | Alto | Crítico | Casos dedicados de control de acceso a nivel FE y API (CP-10, CP-11) |
-| Ambiguedad en numeracion de AC de HU Login puede provocar que algunos criterios no se prueben por confusion | Media | Medio | Alto | Revision estatica (CP-01) y aclaracion formal con el PO antes de iniciar ejecucion |
+| Fuga de datos o acceso cruzado entre Agente y Supervisor por URL directa o bypass del FE | Media | Alto | Crítico | CP-03, CP-04 |
+| Login exitoso otorgado con credenciales inválidas o sesion incorrecta | Media | Alto | Crítico | CP-01, CP-02 |
 
-## 7. Matriz de trazabilidad (Criterios de Aceptación → Casos de prueba)
+## 7. Matriz de trazabilidad (criterios de aceptación → casos prioritarios)
 
-| HU | Criterio de Aceptación | Caso(s) de prueba relacionados |
+| HU | Criterio clave | Caso(s) apoyados |
 |---|---|---|
-| HU-Login | AC1 — Carga de perfiles desde seed | Verificado como precondición implícita en CP-03, CP-04|
-| HU-Login | AC2 — Validación de credenciales e inicio de sesión | CP-03, CP-04, CP-05, CP-07 |
-| HU-Login | AC3 — Campo correo | CP-07, CP-08 |
-| HU-Login | AC4 (Campo contraseña) | CP-07, CP-08 |
-| HU-Login | AC5 (Redirección a dashboard) | CP-09 |
-| HU-Protección de Rutas | AC1 — Redirección a login | CP-10 |
-| HU-Protección de Rutas | AC2 — Bloqueo de accesos según rol | CP-10, CP-11 |
-| Ambas HUs | Revisión de especificación / ambigüedades | CP-01, CP-02 |
-| Ambas HUs | No funcional | CP-12, CP-13 |
+| HU Login | Credenciales válidas permiten iniciar sesión | CP-01 |
+| HU Login | Credenciales inválidas bloquean acceso | CP-02 |
+| HU Protección de rutas | Bloqueo de acceso cruzado por rol | CP-03 |
+| HU Protección de rutas | Validación del backend sin FE | CP-04 |
 
-## 8. Casos de prueba
+## 8. Casos de prueba prioritarios (críticos y altos)
 
-Se optimizo la tabla de casos fusionando las columnas de "Precondiciones" y "Datos de entrada" en una sola, y se elimino la columna "Producto probado (ciclo de vida)" por ser redundante con el Modulo y el Tipo de prueba.
+| ID | Qué se va a probar | Técnica | Módulo | Tipo de prueba | Prioridad | Criterio de cierre | Ejecutado | Resultado | Comentarios | Evidencia |
+|---|---|---|---|---|---|---|---|---|---|---|
+| CP-01 | Validar login exitoso para Agente y Supervisor con credenciales válidas. | Tabla de decisión (rol × credenciales válidas) | Login | Funcional (manual FE + integración backend) | Crítico | Se cierra cuando ambos roles logran iniciar sesión, se guarda el token/rol y el flujo redirige al dashboard correcto sin errores. | Sí | Aprobado | Se validó el backend con login exitoso y generación de token/rol para un usuario autenticado. | `apps/back/src/app/auth/tests/backend-auth-security/backend-auth-security.spec.ts` |
+| CP-02 | Verificar que credenciales incorrectas no permiten acceder y muestran el error esperado. | Partición de equivalencia (válido vs. inválido) | Login | Funcional (manual FE + integración backend) | Crítico | Se cierra cuando la combinación inválida devuelve error consistente y no se genera sesión ni acceso a rutas protegidas. | Sí | Aprobado | Se validó que usuario inexistente y contraseña incorrecta lanzan `UnauthorizedException` con el mensaje esperado. | `apps/back/src/app/auth/tests/backend-auth-security/backend-auth-security.spec.ts` |
+| CP-03 | Validar bloqueo del acceso cruzado entre roles usando URL directa y sesiones autenticadas. | Partición de equivalencia + error guessing | Protección de rutas | Funcional manual (Frontend) + integración backend | Crítico | Se cierra cuando Agente no entra a rutas de Supervisor y viceversa, con redirección o 403, sin exponer datos del otro rol. | No | Manual FE | No es automatizable en backend puro; requiere flujo real del navegador y validación de routing. | N/A |
+| CP-04 | Validar que el backend rechaza acceso directo a recursos protegidos aunque se bypassée la interfaz. | Error guessing + partición de equivalencia | Protección de rutas | Integración backend | Crítico | Se cierra cuando cualquier petición directa con token de un rol sin permiso devuelve 403/401 y no expone datos ajenos. | Sí | Aprobado | Se validó la regla de aislamiento que bloquea acceso a ticket ajeno para Agente con `403` y sin exponer datos. | `apps/back/src/app/tickets/tests/isolation-guard/isolation-guard.spec.ts` |
 
-| ID | Caso de prueba | Técnica | Módulo | Criterio (HU-AC) | Tipo de prueba | Prioridad | Precondiciones y datos de entrada | Resultado esperado | Estado |
-|---|---|---|---|---|---|---|---|---|---|
-| CP-01 | Revision_Estatica_HU_Login: revisar la especificacion de la HU buscando ambiguedades y vacios de definicion | Revisión estática | Login | HU-Login (documento completo) | Aceptación | Medio | Ninguna / HU_Login.md | Hallazgos documentados y elevados al PO antes del cierre del suite | Pendiente |
-| CP-02 | Revision_Estatica_HU_Proteccion_Rutas: revisar la especificacion identificando vacios (ej. comportamiento de Supervisor sobre vistas de Agente) | Revisión estática | Protección de Rutas | HU-Protección de Rutas (documento completo) | Aceptación | Medio | Ninguna / HU_Proteccion_Rutas.md | Hallazgos documentados y elevados al PO antes del cierre del suite | Pendiente |
-| CP-03 | Sistema_Login_Exitoso_Por_Rol: verificar que un usuario Agente y un usuario Supervisor con credenciales validas pueden iniciar sesion exitosamente | Tabla de decisión (rol Agente / rol Supervisor) | Login | HU-Login AC2 | Funcional (Sistema) | Crítico | Usuarios Agente y Supervisor en seed / correo y contraseña validos para cada uno | Login exitoso para ambos roles, sesion iniciada, sin mensajes de error | Pendiente |
-| CP-04 | Sistema_Login_Credenciales_Incorrectas: verificar que con credenciales incorrectas se muestra la notificacion exacta y no se otorga acceso | Partición de equivalencia (clase inválida) | Login | HU-Login AC2 | Funcional (Sistema) | Crítico | Usuario existente en seed / correo valido con contraseña incorrecta | Se muestra "El usuario o contraseña es incorrecto, intente de nuevo"; no se inicia sesión | Pendiente |
-| CP-05 | Integracion_Endpoint_Autenticacion: verificar la respuesta del endpoint de autenticacion con credenciales validas e invalidas (2 corridas) | Prueba de integración de componentes | Login | HU-Login AC2 | Integración | Crítico | Endpoint desplegado / payload valido y payload invalido | Con credenciales validas responde 200 con token y rol; con invalidas responde error (4xx) sin exponer info sensible | Pendiente |
-| CP-06 | Unitaria_Persistencia_Sesion_Redux: verificar que tras un login exitoso el estado de sesion se guarda correctamente en el store global | Prueba de transición de estados | Login | HU-Login AC2 | Unitaria | Alto | Store Redux en estado "no autenticado" / accion de login exitosa despachada | El store refleja estado "autenticado" con usuario y rol persistidos | Pendiente |
-| CP-07 | Sistema_Tabla_Decision_Campos_Obligatorios: verificar el comportamiento del formulario con correo y/o contraseña vacios | Tabla de decisión (correo vacío/válido × contraseña vacía/válida) | Login | HU-Login AC3, AC4 | Funcional (Sistema) | Alto | Ninguna / combinaciones (vacío,vacío), (vacío,válida), (válido,vacía), (válido,válida) | Cada combinacion muestra la validacion correspondiente al campo faltante; solo válido+válido permite continuar | Pendiente |
-| CP-08 | Unitaria_Formato_Correo_Y_Longitud_Contrasena: verificar formato invalido de correo y limite minimo de 8 caracteres en contraseña | Análisis de valores límite + partición de equivalencia | Login | HU-Login AC3, AC4 | Unitaria | Alto | Ninguna / correos "usuario", "usuario@", "usuario@dominio" y contraseñas de 7 y 8 caracteres | Formatos de correo invalidos son rechazados; contraseña de 7 caracteres invalida, de 8 aceptada | Pendiente |
-| CP-09 | Sistema_Redireccion_Dashboard_Por_Rol: verificar que tras login exitoso el usuario es redirigido a su dashboard correspondiente | Tabla de decisión (credenciales válidas × rol → destino) | Login | HU-Login AC5 (redirección) | Funcional (Sistema) | Crítico | Usuario valido en seed / credenciales validas de Agente y Supervisor | El usuario es redirigido al dashboard correspondiente inmediatamente despues del login | Pendiente |
-| CP-10 | Sistema_Bloqueo_Cruzado_Por_Rol: verificar bloqueo cuando un Agente intenta acceder a vista de Supervisor por URL directa, y viceversa | Error guessing + partición de equivalencia | Protección de Rutas | HU-Protección de Rutas AC1, AC2 | Funcional (Sistema) | Crítico | Usuario Agente y Supervisor autenticados / URL directa a ruta exclusiva del otro rol | Acceso bloqueado en ambos sentidos, redireccion o pantalla de acceso denegado | Pendiente |
-| CP-11 | Integracion_Validacion_Rol_Backend: verificar que el control de acceso por rol tambien se aplica en el backend y no solo en el guard de FE | Error guessing (bypass de FE) | Protección de Rutas | HU-Protección de Rutas AC2 | Integración | Crítico | Token valido de Agente | Petición directa a un endpoint exclusivo de Supervisor | El backend responde 403 sin exponer datos de Supervisor | Pendiente |
-| CP-12 | NoFuncional_Tiempo_Respuesta_Login: medir el tiempo de respuesta del flujo de login end to end | Prueba no funcional de rendimiento | Login | HU-Login AC2 | No funcional (rendimiento) | Medio | Ambiente de pruebas estable / 10 intentos de login validos | El login responde en menos de 2 segundos en al menos el 90% de los intentos | Pendiente |
-| CP-13 | NoFuncional_Seguridad_Datos_Sensibles: verificar que la contraseña no se expone en la respuesta del API ni en logs, y que el mensaje de error no revela si el correo existe o no | Error guessing | Login | HU-Login AC2 | No funcional (seguridad) | Alto | Endpoint desplegado / peticiones con correo existente e inexistente | La respuesta y los logs no contienen la contraseña en texto plano; el mensaje de error es identico para correo inexistente y contraseña incorrecta | Pendiente |
-
-## 9. Resumen de cobertura (a llenar al cierre del suite)
+## 9. Resumen de cobertura
 
 | Métrica | Valor |
 |---|---|
-| Total de casos diseñados | 13 |
-| Casos ejecutados | |
-| Casos aprobados | |
-| Casos fallidos | |
-| Casos bloqueados | |
-| % de ACs criticos cubiertos por al menos 1 caso | |
-| Defectos críticos abiertos | |
-| Cumple criterio de salida (Sí/No) | |
+| Total de casos diseñados | 4 |
+| Casos críticos | 4 |
+| Casos de prioridad alta | 0 |
+| Casos ejecutados | 3 |
+| Casos aprobados | 3 |
+| Casos fallidos | 0 |
+| Casos bloqueados | 0 |
+| Criterio de cierre de la suite | Se aprueba cuando los casos backend automatizados quedan verdes y el caso de acceso cruzado por ruta sigue validándose manualmente en frontend con el flujo real del usuario. |

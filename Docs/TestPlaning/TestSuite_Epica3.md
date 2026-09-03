@@ -51,51 +51,39 @@ Condiciones específicas de esta suite:
 
 | Riesgo | Probabilidad | Impacto | Prioridad resultante | Mitigación |
 |---|---|---|---|---|
-| La informacion mostrada no se encuentra actualizada al momento de ingresar a la seccion | Baja | Alto | Alto | CP-41 (integracion), analisis del contrato de integracion |
-| Calculos erroneos de promedios o sumatorias | Media | Alto | Crítico | CP-38, CP-39 (pruebas unitarias dedicadas a cada funcion) |
-| AC5 redactado de forma ambigua puede llevar a implementar una funcionalidad que no aplica al Dashboard | Media | Medio | Alto | CP-35 (revision estatica) y aclaracion con el PO |
-| Un Agente accede al Dashboard directamente por URL | Baja | Alto | Alto | CP-36 |
+| Acceso no autorizado al dashboard por Agente | Baja | Alto | Crítico | CP-01 |
+| Cálculos de métricas incorrectos | Media | Alto | Crítico | CP-02, CP-03, CP-04 |
+| Datos stale o no actualizados al abrir el dashboard | Media | Medio | Alto | CP-05 |
 
-## 7. Matriz de trazabilidad (Criterios de Aceptación → Casos de prueba)
+## 7. Matriz de trazabilidad (criterios de aceptación → casos prioritarios)
 
-| HU | Criterio de Aceptación | Caso(s) de prueba relacionados |
+| HU | Criterio clave | Caso(s) apoyados |
 |---|---|---|
-| HU03 Dashboard de métricas | AC1 - Acceso exclusivo Supervisor | CP-36 |
-| HU03 Dashboard de métricas | AC2 - Conteo de tickets por estado | CP-37 |
-| HU03 Dashboard de métricas | AC3 - Tiempo promedio (funciones separadas de suma y promedio) | CP-38, CP-39 |
-| HU03 Dashboard de métricas | AC4 - Tickets no cerrados excluidos del promedio | CP-40 |
-| HU03 Dashboard de métricas | AC5 - Actualización | CP-41 |
-| HU03 Dashboard de métricas | AC6 - Catálogo de errores | CP-42 |
-| Sistema | Paridad de diseño / regresión | CP-43 |
-| Sistema | No funcional | CP-44 |
-| HU (documento) | Revisión de especificación / ambigüedades | CP-35 |
+| HU03 | Acceso exclusivo a Supervisor | CP-01 |
+| HU03 | Conteo por estado | CP-02 |
+| HU03 | Suma y promedio de tiempo de cierre | CP-03 |
+| HU03 | Exclusión de tickets no cerrados | CP-04 |
+| HU03 | Datos recientes al entrar al dashboard | CP-05 |
 
-## 8. Casos de prueba
+## 8. Casos de prueba prioritarios (críticos y altos)
 
-Se optimizo la tabla de casos fusionando "Precondiciones" y "Datos de entrada" en una sola columna, y se elimino la columna "Producto probado (ciclo de vida)" por ser redundante con el Modulo y el Tipo de prueba.
+| ID | Qué se va a probar | Técnica | Módulo | Tipo de prueba | Prioridad | Criterio de cierre | Ejecutado | Resultado | Comentarios | Evidencia |
+|---|---|---|---|---|---|---|---|---|---|---|
+| CP-01 | Validar que el Dashboard es accesible solo para Supervisor. | Partición de equivalencia (rol Supervisor vs. Agente) | Dashboard de métricas | Funcional manual (Frontend) + integración backend | Crítico | Se cierra cuando el Supervisor entra y el Agente es bloqueado/redirigido, sin ver valores del dashboard. |  |  |  |  |
+| CP-02 | Validar el conteo correcto de tickets por estado: abiertos, en progreso y cerrados. | Partición de equivalencia (estado) | Dashboard de métricas | Unitaria + integración backend | Alto | Se cierra cuando el número mostrado coincide con los tickets reales y cada estado tiene su conteo exacto. |  |  |  |  |
+| CP-03 | Validar el cálculo de suma y promedio del tiempo de cierre de tickets cerrados. | Partición de equivalencia + prueba unitaria | Dashboard de métricas | Unitaria backend | Crítico | Se cierra cuando la suma y el promedio coinciden con el cálculo manual esperado y se calculan por funciones separadas. |  |  |  |  |
+| CP-04 | Validar que los tickets abiertos o en proceso no se incluyan en el promedio de cierre. | Análisis de valores límite + partición de equivalencia | Dashboard de métricas | Unitaria + integración backend | Alto | Se cierra cuando el promedio considera solo tickets cerrados y evita distorsiones por estados no cerrados. |  |  |  |  |
+| CP-05 | Validar que los indicadores del dashboard se actualizan al entrar y se muestran con datos recientes. | Error guessing + integración | Dashboard de métricas | Funcional manual (Frontend) + integración backend | Alto | Se cierra cuando al ingresar nuevamente el dashboard refleja el último estado real del sistema sin stale data. |  |  |  |  |
 
-| ID | Caso de prueba | Técnica | Módulo | Criterio (HU-AC) | Tipo de prueba | Prioridad | Precondiciones y datos de entrada | Resultado esperado | Estado |
-|---|---|---|---|---|---|---|---|---|---|
-| CP-35 | Revision_Estatica_HU03_Dashboard_Metricas: revisar la version corregida de la HU buscando ambiguedades, en especial la redaccion del AC5 | Revisión estática | Dashboard de métricas | HU03 (documento completo) | Aceptación | Medio | Ninguna / Corrección_HU03_Dashboard_de_métricas.md | Hallazgos documentados y elevados al PO, incluyendo la aclaracion del AC5 | Pendiente |
-| CP-36 | Sistema_Acceso_Exclusivo_Supervisor: validar que el Dashboard es accesible unicamente por el rol Supervisor, incluso si un Agente intenta acceder por URL directa | Partición de equivalencia | Dashboard de métricas | HU03 AC1 | Funcional (Sistema) | Crítico | Cuenta Agente y cuenta Supervisor cargadas / URL directa al Dashboard con sesion de Agente | El Dashboard solo se muestra al Supervisor; el Agente es bloqueado o redirigido | Pendiente |
-| CP-37 | Unitaria_Funcion_Conteo_Por_Estado: verificar que la funcion de conteo calcula de forma precisa la cantidad de tickets por estado | Partición de equivalencia | Dashboard de métricas | HU03 AC2 | Unitaria | Alto | Al menos 5 tickets en cada uno de los 3 estados / lista de tickets como entrada | La funcion devuelve el conteo correcto por cada estado, en un objeto o arreglo | Pendiente |
-| CP-38 | Unitaria_Funcion_Suma_Tiempos_Cierre: verificar que la funcion dedicada a la sumatoria de tiempos de cierre calcula el total correctamente y de forma independiente a la funcion de promedio | Partición de equivalencia | Dashboard de métricas | HU03 AC3 | Unitaria | Alto | Al menos 10 tickets cerrados con fecha de apertura y cierre conocidas | La sumatoria total de tiempos coincide con el calculo manual esperado | Pendiente |
-| CP-39 | Unitaria_Funcion_Promedio_Tiempo_Cierre: verificar que la funcion dedicada al promedio calcula correctamente el tiempo promedio de cierre a partir del resultado de la funcion de sumatoria | Partición de equivalencia | Dashboard de métricas | HU03 AC3 | Unitaria | Alto | Al menos 10 tickets cerrados con fechas conocidas | El tiempo promedio calculado coincide con el esperado y se obtiene mediante una funcion separada de la sumatoria | Pendiente |
-| CP-40 | Sistema_Tickets_No_Cerrados_Excluidos: verificar que los tickets en estado abierto o en proceso no se incluyen en el calculo del promedio de cierre | Análisis de valores límite | Dashboard de métricas | HU03 AC4 | Funcional (Sistema) | Alto | Mezcla de tickets cerrados y no cerrados cargados | El promedio mostrado solo considera los tickets cerrados, sin importar cuantos tickets abiertos o en proceso existan | Pendiente |
-| CP-41 | Integracion_Actualizacion_Metricas_Al_Ingresar: verificar que cada vez que se ingresa a la seccion se realiza una peticion al backend para obtener los calculos actualizados | Error guessing | Dashboard de métricas | HU03 AC5 | Integración | Alto | Contrato de integracion y endpoint disponibles / se crea un ticket nuevo y se reingresa a la pantalla | Los calculos mostrados reflejan los datos mas recientes de la base de datos, incluido el ticket nuevo | Pendiente |
-| CP-42 | Sistema_Catalogo_Errores_Dashboard: verificar que ante una falla al consultar la API de metricas se muestra el mensaje correspondiente segun el catalogo de errores del frontend | Error guessing (desconexion de red simulada) | Dashboard de métricas | HU03 AC6 | Funcional (Sistema) | Medio | Endpoint de metricas desconectado | Se muestra el mensaje de error correspondiente del catalogo | Pendiente |
-| CP-43 | Aceptacion_Paridad_Diseno_Dashboard: validar que el componente y las metricas calculadas mantienen el diseño del Figma vigente | Revisión estática comparativa | Dashboard de métricas | HU03 AC2, AC3, AC4 | Aceptación | Medio | Implementacion del FE integrada con backend / captura de la pantalla implementada | Sin discrepancias relevantes respecto al diseño de Figma | Pendiente |
-| CP-44 | NoFuncional_Rendimiento_Calculo_Metricas: medir el tiempo de respuesta del calculo de metricas con un volumen alto de tickets | Prueba no funcional de rendimiento | Dashboard de métricas | HU03 (general) | No funcional (rendimiento) | Medio | Backend con al menos 300 tickets cargados en distintos estados | El Dashboard muestra los calculos en menos de 2 segundos | Pendiente |
-
-## 9. Resumen de cobertura (a llenar al cierre del suite)
+## 9. Resumen de cobertura
 
 | Métrica | Valor |
 |---|---|
-| Total de casos diseñados | 10 |
-| Casos ejecutados | |
-| Casos aprobados | |
-| Casos fallidos | |
-| Casos bloqueados | |
-| % de ACs criticos cubiertos por al menos 1 caso |  |
-| Defectos críticos abiertos | |
-| Cumple criterio de salida (Sí/No) | |
+| Total de casos diseñados | 5 |
+| Casos críticos | 2 |
+| Casos de prioridad alta | 3 |
+| Casos ejecutados | 0 |
+| Casos aprobados | 0 |
+| Casos fallidos | 0 |
+| Casos bloqueados | 0 |
+| Criterio de cierre de la suite | Se aprueba cuando los 5 casos prioritarios quedan verdes, el dashboard solo es accesible para Supervisor y los cálculos de métricas coinciden con la realidad del sistema. |

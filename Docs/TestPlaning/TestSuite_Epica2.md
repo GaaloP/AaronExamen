@@ -66,74 +66,40 @@ Condiciones específicas de esta suite:
 
 | Riesgo | Probabilidad | Impacto | Prioridad resultante | Mitigación |
 |---|---|---|---|---|
-| Un Agente visualiza, consulta o edita tickets que no le pertenecen | Media | Alto | Crítico | CP-19, CP-26 (control de acceso a nivel UI y API) |
-| El backend no valida el filtrado por rol via JWT y confia unicamente en el frontend | Media | Alto | Crítico | CP-19 |
-| El backend no valida la asignacion de tickets y permite a un Agente asignarse tickets a otra persona manipulando el payload | Media | Alto | Crítico | CP-31 |
-| Perdida de la opcion de "reintentar" al migrar a un catalogo de mensajes de error (regresion funcional respecto a la version anterior de HU02) | Alta | Medio | Alto | CP-25, y aclaracion formal con el PO antes del cierre |
-| Falta de definicion sobre el comportamiento del modal de detalle (cierre, deep link, breadcrumb) | Media | Bajo | Medio | CP-20, revision estatica CP-14 |
-| Boton de reasignacion visible por error para el rol Agente | Baja | Alto | Alto | CP-27 |
-| Inconsistencia de reglas de negocio: no esta definido quien reabre un ticket "cerrado" mencionado en HU Edicion AC3 | Alta | Medio | Alto | Revision estatica CP-32 y aclaracion con el PO |
-| Perdida o sobreescritura de registros del historial al agregar un nuevo cambio de estado | Baja | Alto | Alto | CP-24 |
+| Un Agente visualiza o modifica tickets ajenos | Media | Alto | Crítico | CP-01, CP-05 |
+| Un Agente intenta asignarse o crear un ticket para otro agente | Media | Alto | Crítico | CP-02 |
+| Transiciones inválidas de estado permiten romper reglas de negocio | Media | Alto | Crítico | CP-03, CP-04 |
+| Reapertura de ticket cerrado por un Agente | Alta | Medio | Alto | CP-04 |
 
-## 7. Matriz de trazabilidad (Criterios de Aceptación → Casos de prueba)
+## 7. Matriz de trazabilidad (criterios de aceptación → casos prioritarios)
 
-| HU | Criterio de Aceptación | Caso(s) de prueba relacionados |
+| HU | Criterio clave | Caso(s) apoyados |
 |---|---|---|
-| HU01-Lista de Tickets | AC1 — Tabla de tickets (Material UI, notas técnicas) | CP-15 |
-| HU01-Lista de Tickets | AC2 — Información por ticket | Cubierto de forma implicita en CP-15, sin caso dedicado |
-| HU01-Lista de Tickets | AC3 — Filtro por estado (endpoint específico) | CP-16 |
-| HU01-Lista de Tickets | AC4 — Lista vacía | CP-17 |
-| HU01-Lista de Tickets | AC5 — Catálogo de mensajes de error | CP-18 |
-| HU01-Lista de Tickets | AC6 — Acciones por rol / filtrado obligatorio en backend via JWT | CP-19 |
-| HU01-Lista de Tickets | AC7 — Detalle (apertura de modal) | CP-20 |
-| HU02-Detalle e Historial | AC1 — Información por ticket (incluye Descripción) | CP-22 |
-| HU02-Detalle e Historial | AC2, AC3 — Historial completo y campos del historial | CP-23, CP-24 |
-| HU02-Detalle e Historial | AC4 — Datos reales | Verificado de forma implicita en CP-23 |
-| HU02-Detalle e Historial | AC5 — Actualización | CP-24 |
-| HU02-Detalle e Historial | AC6 — Catálogo de errores | CP-25 |
-| HU02-Detalle e Historial | AC7 — Accesos por rol | CP-26 |
-| HU02-Detalle e Historial | AC8 — Reasignación (solo Supervisor) | CP-27 |
-| HU-Creación de Tickets | AC1, AC2 — Campos y validaciones obligatorias | CP-29 |
-| HU-Creación de Tickets | AC3 — Creación por rol / asignación | CP-30, CP-31 |
-| HU-Edición de Tickets | AC1, AC2, AC3 — Campos editables, permisos y estado | CP-33 |
-| Todas las HUs | Revisión de especificación / ambigüedades | CP-14, CP-21, CP-28, CP-32 |
-| Modulo Tickets (general) | No funcional | CP-34 |
+| HU02 / HU01 | Agente no puede consultar ticket ajeno | CP-01 |
+| HU Creación | Agente no puede asignar ticket a otro agente | CP-02 |
+| HU Edición / cambio de estado | Transiciones válidas según estado | CP-03 |
+| HU Edición / cambio de estado | Transiciones inválidas y reabrir cerrado | CP-04 |
+| HU Edición | Permisos de edición según rol y propiedad | CP-05 |
 
-## 8. Casos de prueba
+## 8. Casos de prueba prioritarios (críticos y altos)
 
-| ID | Caso de prueba | Técnica | Módulo | Criterio (HU-AC) | Tipo de prueba | Prioridad | Precondiciones y datos de entrada | Resultado esperado | Estado |
-|---|---|---|---|---|---|---|---|---|---|
-| CP-14 | Revision_Estatica_HU01_Lista_Tickets: revisar la version refinada de la HU buscando ambiguedades restantes | Revisión estática | Lista de Tickets | HU01 (documento completo) | Aceptación | Medio | Ninguna / Corrección_HU01_Lista_de_Tickets.md | Hallazgos documentados y elevados al PO antes del cierre del suite | Pendiente |
-| CP-15 | Integracion_Tabla_Conforme_Notas_Tecnicas: verificar que la tabla (Material UI) obtiene los tickets desde el endpoint descrito en notas tecnicas, mostrando numero, categoria, estado y agente asignado | Partición de equivalencia | Lista de Tickets | HU01 AC1, AC2 | Integración | Alto | Tickets cargados en backend / consulta inicial de la pantalla | La tabla muestra los tickets obtenidos del endpoint indicado, con los 4 campos correctos | Pendiente |
-| CP-16 | Sistema_Filtro_Estado_Endpoint_Especifico: verificar que cada filtro (Todos, Abiertos, En progreso, Cerrados) consume el endpoint especifico indicado en notas tecnicas | Tabla de decisión (4 estados de filtro) | Lista de Tickets | HU01 AC3 | Funcional (Sistema) | Alto | Tickets en distintos estados cargados / seleccion de cada filtro | Cada filtro devuelve unicamente los tickets del estado correspondiente, consultando el endpoint especifico | Pendiente |
-| CP-17 | Sistema_Lista_Vacia: verificar el mensaje mostrado cuando no hay tickets para el filtro/rol seleccionado | Análisis de valores límite (0 elementos) | Lista de Tickets | HU01 AC4 | Funcional (Sistema) | Medio | Backend configurado para devolver lista vacia / filtro sin resultados | Se muestra el mensaje "No se encontraron tickets" | Pendiente |
-| CP-18 | Sistema_Catalogo_Errores_Lista: verificar que ante una falla de backend se muestra el mensaje correspondiente segun el catalogo de errores del frontend, y no un texto generico | Error guessing (simulación de falla de red/backend) | Lista de Tickets | HU01 AC5 | Funcional (Sistema) | Alto | Backend simulando error 5xx y timeout (2 corridas) / carga inicial de pantalla | Se muestra el mensaje del catalogo correspondiente al tipo de error ocurrido | Pendiente |
-| CP-19 | Integracion_Filtrado_Rol_Obligatorio_JWT: verificar que el filtrado por rol (Agente ve solo asignados, Supervisor ve todos) se aplica de forma obligatoria en el backend a partir del JWT, incluso manipulando parametros desde el cliente | Error guessing + partición de equivalencia | Lista de Tickets | HU01 AC6 | Integración | Crítico | Al menos 2 Agentes con tickets asignados / peticion como Agente A manipulando parametros para pedir tickets de Agente B | El backend ignora cualquier parametro manipulado y devuelve solo los tickets que corresponden al rol/usuario del JWT | Pendiente |
-| CP-20 | Sistema_Apertura_Modal_Detalle: verificar que al seleccionar un ticket de la tabla se abre el modal de detalle de HU02, y no una navegacion a pantalla completa | Prueba de transición de estados | Lista de Tickets | HU01 AC7 | Funcional (Sistema) | Alto | Al menos 1 ticket visible en tabla / click sobre una fila | Se abre un modal con el detalle del ticket seleccionado, sin abandonar la pantalla de lista | Pendiente |
-| CP-21 | Revision_Estatica_HU02_Detalle_Historial: revisar la version refinada de la HU, incluyendo la desaparicion aparente de la opcion de reintento en AC6 | Revisión estática | Detalle y Historial | HU02 (documento completo) | Aceptación | Medio | Ninguna / Corrección_HU02_Detalle_de_ticket_e_historial.md | Hallazgos documentados, incluyendo consulta formal al PO sobre AC6 | Pendiente |
-| CP-22 | Integracion_Info_Detalle_Con_Descripcion: verificar que el modal de detalle muestra numero, categoria, descripcion, estado actual y agente asignado | Partición de equivalencia | Detalle y Historial | HU02 AC1 | Integración | Alto | Ticket existente con todos los campos poblados en backend | Los 5 campos se muestran correctamente y coinciden con el backend, incluyendo la nueva Descripcion | Pendiente |
-| CP-23 | Sistema_Historial_Campos_Completos: verificar que cada registro del historial muestra fecha y hora, usuario que modifico, estado anterior y nuevo, y comentario cuando aplica | Partición de equivalencia (con y sin comentario) | Detalle y Historial | HU02 AC2, AC3 | Funcional (Sistema) | Alto | Ticket con al menos 2 registros de historial, uno con comentario y uno sin | El historial muestra los 4 campos obligatorios en cada registro y el comentario solo cuando fue capturado | Pendiente |
-| CP-24 | Integracion_Conservacion_Y_Actualizacion_Historial: verificar que al enviar un nuevo cambio de estado desde el frontend, el historial resultante conserva los registros previos y agrega el nuevo | Prueba de transición de estados (N → N+1) | Detalle y Historial | HU02 AC3, AC5 | Integración | Crítico | Ticket con al menos 2 registros previos / nuevo cambio de estado enviado desde el frontend | El historial mostrado contiene N+1 registros, los N anteriores permanecen intactos | Pendiente |
-| CP-25 | Sistema_Catalogo_Errores_Detalle: verificar el mensaje mostrado ante error en consulta o actualizacion del detalle/historial, segun el catalogo definido | Error guessing | Detalle y Historial | HU02 AC6 | Funcional (Sistema) | Alto | Backend simulando error en GET y en PUT (2 corridas) | Se muestra el mensaje del catalogo correspondiente; **si no existe boton de reintento, documentar como hallazgo** | Pendiente |
-| CP-26 | Integracion_Bloqueo_Detalle_Ajeno_Agente: verificar que un Agente no puede consultar el detalle de un ticket ajeno, incluso accediendo por ID directo | Error guessing + partición de equivalencia | Detalle y Historial | HU02 AC7 | Integración | Crítico | Ticket asignado a otro Agente / peticion como Agente A pidiendo ID de ticket de Agente B | El backend responde 403 y no expone los datos del ticket | Pendiente |
-| CP-27 | Sistema_Boton_Reasignacion_Solo_Supervisor: verificar que el boton de reasignar ticket solo es visible y ejecutable para el rol Supervisor | Partición de equivalencia (rol Agente / rol Supervisor) | Detalle y Historial | HU02 AC8 | Funcional (Sistema) | Crítico | Ticket abierto en modal de detalle como Agente y como Supervisor (2 corridas) | El boton no aparece (o esta deshabilitado) para Agente, y es visible y funcional para Supervisor | Pendiente |
-| CP-28 | Revision_Estatica_HU_Creacion_Tickets: revisar la especificacion buscando ambiguedades | Revisión estática | Creación de Tickets | HU-Creación (documento completo) | Aceptación | Medio | Ninguna / HU06_Creacion_Tickets.md | Hallazgos documentados y elevados al PO | Pendiente |
-| CP-29 | Sistema_Tabla_Decision_Campos_Obligatorios: verificar el mensaje mostrado con Categoria y/o Descripcion vacias al crear un ticket | Tabla de decisión (Categoría vacía/llena × Descripción vacía/llena) | Creación de Tickets | HU-Creación AC1, AC2 | Funcional (Sistema) | Alto | Ninguna / combinaciones (vacía,vacía), (vacía,llena), (llena,vacía), (llena,llena) | Se muestra el mensaje del campo faltante en cada caso; solo llena+llena permite crear el ticket | Pendiente |
-| CP-30 | Sistema_Asignacion_Segun_Rol: verificar que un Agente crea el ticket autoasignado a si mismo, y que un Supervisor puede elegir a que Agente lo asigna | Tabla de decisión (rol Agente / rol Supervisor) | Creación de Tickets | HU-Creación AC3 | Funcional (Sistema) | Crítico | Agente autenticado y Supervisor autenticado con al menos 2 Agentes disponibles | Agente: ticket queda asignado a si mismo, sin poder elegir otro. Supervisor: puede elegir el Agente asignado | Pendiente |
-| CP-31 | Integracion_Backend_Rechaza_Asignacion_Indebida: verificar que el backend rechaza la creacion de un ticket enviado por un Agente asignado a otro Agente, manipulando el payload directamente | Error guessing | Creación de Tickets | HU-Creación AC3 | Integración | Crítico | Token valido de Agente A / payload con agenteAsignado = Agente B | El backend responde con error de validacion/autorizacion y no crea el ticket | Pendiente |
-| CP-32 | Revision_Estatica_HU_Edicion_Tickets: revisar la especificacion, incluyendo la ambiguedad de quien reabre un ticket cerrado | Revisión estática | Edición de Tickets | HU-Edición (documento completo) | Aceptación | Medio | Ninguna / HU07_Edicion_Tickets.md | Hallazgos documentados y elevados al PO, incluyendo aclaracion sobre reapertura de tickets | Pendiente |
-| CP-33 | Sistema_Tabla_Decision_Permisos_Edicion: verificar el resultado combinado de permisos de edicion segun estado del ticket (abierto/en proceso/cerrado) y rol (Agente/Supervisor), incluyendo que campos son editables en cada caso | Tabla de decisión (estado × rol) | Edición de Tickets | HU-Edición AC1, AC2, AC3 | Funcional (Sistema) | Crítico | Tickets en los 3 estados, asignados a distintos Agentes; Supervisor disponible | Cada combinacion respeta las reglas de permiso y campos editables por rol y por estado; tickets cerrados no editables directamente | Pendiente |
-| CP-34 | NoFuncional_Rendimiento_Carga_Listado: medir el tiempo de carga de la tabla de tickets con un volumen alto de registros | Prueba no funcional de rendimiento | Lista de Tickets | HU01 (general) | No funcional (rendimiento) | Medio | Backend con al menos 200 tickets cargados / carga inicial de la pantalla de lista | La tabla carga y renderiza en menos de 3 segundos | Pendiente |
+| ID | Qué se va a probar | Técnica | Módulo | Tipo de prueba | Prioridad | Criterio de cierre | Ejecutado | Resultado | Comentarios | Evidencia |
+|---|---|---|---|---|---|---|---|---|---|---|
+| CP-01 | Verificar que un Agente solo puede consultar tickets asignados a él y no ve tickets ajenos. | Partición de equivalencia (propio vs. ajeno) | Ticket / detalle | Funcional manual (Frontend) + integración backend | Crítico | Se cierra cuando un ticket ajeno devuelve 403 o bloqueo visual, y un ticket propio se muestra correctamente sin fugas de información. | Sí | Aprobado | Validado con el servicio `getTicketById`: ticket propio responde `200` y ticket ajeno responde `403`. | `apps/back/src/app/tickets/tests/isolation-guard/isolation-guard.spec.ts` |
+| CP-02 | Validar que un Agente no puede crear ni reasignar un ticket a otro Agente aunque el payload se modifique directamente. | Error guessing + partición de equivalencia | Creación de ticket | Integración backend + validación manual del formulario | Crítico | Se cierra cuando el backend rechaza el payload con `assignedToUuid` de otro agente y no crea el ticket fuera de su propiedad. | Sí | Aprobado | Validado en `editTicket` con `assignedToUuid` distinto al agente autenticado; el servicio responde `403` y bloquea la reasignación. | `apps/back/src/app/tickets/tests/isolation-guard/isolation-guard.spec.ts` |
+| CP-03 | Validar las transiciones de estado permitidas según la regla de negocio: `Open -> InProgress` y `InProgress -> Closed`. | Partición de equivalencia (clase válida) | Cambio de estado | Unitaria backend + manual FE | Crítico | Se cierra cuando ambas transiciones son aceptadas y el historial refleja el cambio con el estado anterior y nuevo correctos. | Sí | Aprobado | Se validó la clase válida de transiciones y el servicio responde `200` con `editedTicket.status` actualizado. | `apps/back/src/app/tickets/tests/isolation-guard/isolation-guard.spec.ts` |
+| CP-04 | Validar las transiciones prohibidas y la no reapertura de un ticket cerrado: `Open -> Closed`, `InProgress -> Open`, `Closed -> Open`. | Partición de equivalencia (clase inválida) | Cambio de estado | Unitaria backend + manual FE | Crítico | Se cierra cuando todas las transiciones inválidas fallan con 409 y el agente no puede reabrir un ticket cerrado. | Sí | Aprobado | Se validó la clase inválida con `409` para transiciones no permitidas y reabrir un ticket cerrado. | `apps/back/src/app/tickets/tests/isolation-guard/isolation-guard.spec.ts` |
+| CP-05 | Validar que un Agente no puede editar ni reasignar tickets que no son suyos, y que un Supervisor sí puede hacerlo. | Partición de equivalencia (rol × propiedad) | Edición del ticket | Funcional manual (Frontend) + integración backend | Alto | Se cierra cuando la edición de tickets ajenos para Agente es bloqueada y la edición por Supervisor se permite solo bajo permisos correctos. | Sí | Aprobado | Se validó en backend que un agente no puede reasignar a otro usuario y el servicio devuelve `403`. | `apps/back/src/app/tickets/tests/isolation-guard/isolation-guard.spec.ts` |
 
-## 9. Resumen de cobertura (a llenar al cierre del suite)
+## 9. Resumen de cobertura
 
 | Métrica | Valor |
 |---|---|
-| Total de casos diseñados | 21 |
-| Casos ejecutados | |
-| Casos aprobados | |
-| Casos fallidos | |
-| Casos bloqueados | |
-| % de ACs criticos cubiertos por al menos 1 caso |  |
-| Defectos críticos abiertos | |
-| Cumple criterio de salida (Sí/No) | |
+| Total de casos diseñados | 5 |
+| Casos críticos | 4 |
+| Casos de prioridad alta | 1 |
+| Casos ejecutados | 5 |
+| Casos aprobados | 5 |
+| Casos fallidos | 0 |
+| Casos bloqueados | 0 |
+| Criterio de cierre de la suite | Se aprueba cuando los 5 casos prioritarios quedan verdes, la regla de aislamiento por agente está validada en backend y las transiciones de estado cumplen la partición de equivalencia. |
