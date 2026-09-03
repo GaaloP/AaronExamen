@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Ticket, TicketStatus } from './entities/ticket.entity';
@@ -7,6 +7,9 @@ import type { GetPaginatedTicketsDto } from './dto/get-tickets-query.dto';
 import type { AuthenticatedUser } from '../auth/authenticated-user.interface';
 import type { EditStatusDto } from './dto/edit-ticket-status.dto';
 import type { EditTicketDto } from './dto/edit-ticket.dto';
+import { UserRole } from '../users/user.entity';
+import { User } from '../users/user.entity';
+import type { CreateTicketDto } from './dto/create-ticket.dto';
 
 
 @Injectable()
@@ -14,6 +17,7 @@ export class TicketsService {
     constructor(
         @InjectRepository(Ticket) private readonly ticketRepository: Repository<Ticket>,
         @InjectRepository(History) private historyRepository: Repository<History>,
+        @InjectRepository(User) private readonly userRepository: Repository<User>,
     ) { }
 
     async findAll(query: GetPaginatedTicketsDto, currentUser: AuthenticatedUser) {
@@ -32,7 +36,7 @@ export class TicketsService {
         if (currentUser.role?.toLowerCase() === 'user') {
             qb.andWhere('assignedTo.uuid = :agentUuid', { agentUuid: currentUser.uuid });
         }
-        qb.orderBy('ticket.openAt', 'DESC')
+        qb.orderBy('ticket.createdAt', 'DESC')
             .skip((page - 1) * limit)
             .take(limit);
 
@@ -115,7 +119,7 @@ export class TicketsService {
                         fullName: h.modifierUser.fullName,
                     } : null,
                     field: 'status',
-                    prevValue: h.lasState ?? '',
+                    prevValue: h.lastState ?? '',
                     newValue: h.actualState ?? '',
                     comment: h.comment ?? '',
                 })),
@@ -183,10 +187,9 @@ export class TicketsService {
 
             // Registrar en historial
             const historyEntry = this.historyRepository.create({
-                date: new Date(),
                 modifierUser: { uuid: currentUser.uuid } as any,
                 ticketUuid: id,
-                lasState: currentStatus,
+                lastState: currentStatus,
                 actualState: newStatus,
                 comment: payload.comment || 'status updated',
             });
@@ -244,12 +247,11 @@ export class TicketsService {
             .getOne();
 
         const historyEntry = this.historyRepository.create({
-            date: new Date(),
-            modifierUser: { uuid: currentUser.uuid } as any,
+            date: ticketActualizado?.createdAt,
+            modifierUser: { uuid: ticketActualizado?.createdBy?.uuid } as any,
             ticketUuid: id,
-            lasState: ticketActualizado?.status as TicketStatus,
             actualState: ticketActualizado?.status as TicketStatus,
-            comment: payload.comment || 'ticket updated',
+            comment: payload.comment || 'Se creo el ticket',
         });
 
         await this.historyRepository.save(historyEntry);
@@ -267,5 +269,45 @@ export class TicketsService {
                 closedAt: ticketActualizado?.closedAt
             }
         }
+    }
+
+    async createTicket(payload: CreateTicketDto, currentUser: AuthenticatedUser) {
+
+        if (currentUser.role !== UserRole.SUPERVISOR && payload.assignedToUuid ) throw new ForbiddenException('No cuentas con los permisos necesarios para crear este recurso.');
+
+        if (payload.assignedToUuid) {
+            const assignedUser = await this.userRepository.findOneBy({
+                uuid: payload.assignedToUuid,
+            });
+
+            if (!assignedUser) {
+                throw new NotFoundException('El usuario asignado no existe.');
+            }
+        }
+        
+        
+
+        const assignedToUuid = currentUser.role == UserRole.AGENT ? currentUser.uuid : payload.assignedToUuid;
+        const newTicket = this.ticketRepository.create({
+            category: payload.category,
+            description: payload.description,
+            assignedTo: assignedToUuid ? {uuid: assignedToUuid} as any : undefined,
+            createdBy: { uuid: currentUser.uuid } as any,
+            status: TicketStatus.OPEN,
+        });
+
+        const savedTicket = await this.ticketRepository.save(newTicket);
+
+        const historyEntry = this.historyRepository.create({
+            date: new Date(),
+            modifierUser: { uuid: currentUser.uuid } as any,
+            ticketUuid: savedTicket.uuid,
+            actualState: TicketStatus.OPEN,
+            comment: 'Ticket creado',
+        });
+
+        await this.historyRepository.save(historyEntry);
+
+        return savedTicket;
     }
 }
