@@ -1,10 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Ticket, TicketStatus } from './entities/ticket.entity';
 import { GetTicketsQueryDto } from './dto/get-tickets-query.dto';
 import { History } from './entities/history.entity';
-import { EditStatusDto } from './dto/edit-state.dto';
+import { EditStatusDto, EditTicketDto } from './dto/edit-state.dto';
 import { AuthenticatedUser } from './dto/autenticated-user.dto';
 
 
@@ -215,6 +215,57 @@ export class TicketsService {
                 error: 'Error interno del servidor',
                 message: 'Ocurrió un error inesperado al procesar la solicitud.',
             };
+        }
+    }
+
+    async editTicket(id: string, payload: EditTicketDto, currentUser: AuthenticatedUser) {
+        const ticket = await this.ticketRepository
+            .createQueryBuilder()
+            .update(Ticket)
+            .set({
+                category: payload.category,
+                description: payload.description,
+                assignedTo: payload.assignedToUuid ? { uuid: payload.assignedToUuid } as any : undefined
+            })
+            .where('uuid = :id', { id })
+            .execute();
+        if (ticket.affected === 0) {
+            return {
+                statusCode: 404,
+                error: 'No encontrado',
+                message: `El ticket con uuid ${id} no existe.`,
+            };
+        }
+
+        const ticketActualizado = await this.ticketRepository
+            .createQueryBuilder('ticket')
+            .leftJoinAndSelect('ticket.assignedTo', 'assignedTo')
+            .where('ticket.uuid = :id', { id })
+            .getOne();
+
+        const historyEntry = this.historyRepository.create({
+            date: new Date(),
+            modifierUser: { uuid: currentUser.uuid } as any,
+            ticketUuid: id,
+            lasState: ticketActualizado?.status as TicketStatus,
+            actualState: ticketActualizado?.status as TicketStatus,
+            comment: payload.comment || 'ticket updated',
+        });
+
+        await this.historyRepository.save(historyEntry);
+
+        return {
+            editedTicket: {
+                uuid: ticketActualizado?.uuid,
+                ticketCode: ticketActualizado?.ticketCode,
+                category: ticketActualizado?.category,
+                description: ticketActualizado?.description,
+                assignedTo: ticketActualizado?.assignedTo?.fullName || null,
+                createdAt: ticketActualizado?.openAt,
+                createdBy: ticketActualizado?.assignedTo?.fullName || null,
+                status: ticketActualizado?.status,
+                closedAt: ticketActualizado?.closedAt
+            }
         }
     }
 }
