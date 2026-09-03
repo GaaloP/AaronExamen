@@ -1,6 +1,7 @@
 
 import {
     Column,
+    CreateDateColumn,
     Entity,
     JoinColumn,
     ManyToOne,
@@ -12,23 +13,23 @@ import { TicketStatus } from './ticket.entity';
 @Entity()
 export class History {
     @PrimaryGeneratedColumn('uuid')
-    id?: string;
+    id!: string;
 
-    @Column({ type: 'timestamp' })
-    date?: Date;
+    @CreateDateColumn()
+    date!: Date;
 
     @ManyToOne(() => User, { eager: false, nullable: false })
     @JoinColumn({ name: 'modifierUserUUID' })
-    modifierUser?: User;
+    modifierUser!: User;
 
     @Column({ type: 'uuid' })
-    ticketUuid?: string;
+    ticketUuid!: string;
 
     @Column({ type: 'enum', enum: TicketStatus, nullable: true })
-    lasState?: TicketStatus;
+    lastState?: TicketStatus;
 
-    @Column({ type: 'enum', enum: TicketStatus, nullable: true })
-    actualState?: TicketStatus;
+    @Column({ type: 'enum', enum: TicketStatus, })
+    actualState!: TicketStatus;
 
     @Column({ type: 'varchar', length: 255, nullable: true })
     comment?: string;
