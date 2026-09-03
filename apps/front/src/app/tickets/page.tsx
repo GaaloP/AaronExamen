@@ -16,6 +16,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../store/store';
 import { logout } from '../../features/auth/authSlice';
 import { setFilter, setPage, setLimit } from '../../features/auth/ticketSlice';
+import AddIcon from '@mui/icons-material/Add';
 
 function capitalize(value: string): string {
   if (!value) return '';
@@ -85,9 +86,7 @@ export default function TicketsPage() {
         </List>
       </Box>
 
-      {/* Contenido Principal */}
       <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', bgcolor: '#f5f5f5' }}>
-        {/* Barra superior */}
         <Box
           sx={{
             height: 56,
@@ -111,24 +110,36 @@ export default function TicketsPage() {
         </Box>
 
         <Box sx={{ p: 4 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-            <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#1e2a3a' }}>
-              Gestión de Tickets
-            </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+              <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#1e2a3a' }}>
+                Gestión de Tickets
+              </Typography>
 
-            <FormControl size="small" sx={{ minWidth: 150 }}>
-              <InputLabel>Estado</InputLabel>
-              <Select
-                value={filter}
-                label="Estado"
-                onChange={(e) => dispatch(setFilter(e.target.value))}
-              >
-                <MenuItem value="Todos">Todos</MenuItem>
-                <MenuItem value="Abierto">Abiertos</MenuItem>
-                <MenuItem value="En progreso">En Progreso</MenuItem>
-                <MenuItem value="Cerrado">Cerrados</MenuItem>
-              </Select>
-            </FormControl>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <FormControl size="small" sx={{ minWidth: 150 }}>
+                  <InputLabel>Estado</InputLabel>
+                  <Select
+                    value={filter}
+                    label="Estado"
+                    onChange={(e) => dispatch(setFilter(e.target.value))}
+                  >
+                    <MenuItem value="Todos">Todos</MenuItem>
+                    <MenuItem value="Abierto">Abiertos</MenuItem>
+                    <MenuItem value="En progreso">En Progreso</MenuItem>
+                    <MenuItem value="Cerrado">Cerrados</MenuItem>
+                  </Select>
+                </FormControl>
+
+                <Button
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  component={Link}
+                  href="/tickets/new"
+                  sx={{ textTransform: 'none' }}
+                >
+                  Crear ticket
+                </Button>
+              </Box>
           </Box>
 
           <Paper elevation={0} sx={{ borderRadius: 2, overflow: 'hidden' }}>
