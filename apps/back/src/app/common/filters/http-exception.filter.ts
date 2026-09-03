@@ -27,8 +27,13 @@ export class HttpExceptionFilter implements ExceptionFilter {
                     ? (res as any).message
                     : 'Los parámetros contienen valores no válidos.';
             } else if (status === HttpStatus.UNAUTHORIZED) {
-                error = 'No autenticado';
-                message = 'El token de autenticación no fue proporcionado o ha expirado.';
+                const exceptionMessage = typeof res === 'object' && (res as any).message
+                    ? (res as any).message
+                    : undefined;
+                error = exceptionMessage === 'Las credenciales son incorrectas'
+                    ? 'No autorizado'
+                    : 'No autenticado';
+                message = exceptionMessage ?? 'El token de autenticación no fue proporcionado o ha expirado.';
             } else if (typeof res === 'object' && (res as any).message) {
                 message = (res as any).message;
                 error = (res as any).error ?? error;
