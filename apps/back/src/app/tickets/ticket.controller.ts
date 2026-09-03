@@ -3,7 +3,7 @@ import type { Request } from 'express';
 import { GetTicketsQueryDto } from './dto/get-tickets-query.dto';
 import { TicketsService } from './ticket.services';
 import { JwtGuard } from '../auth/guards/jwt.guard';
-import { EditStatusDto } from './dto/edit-state.dto';
+import { EditStatusDto, EditTicketDto } from './dto/edit-state.dto';
 import { AuthenticatedUser } from './dto/autenticated-user.dto';
 
 type RequestWithUser = Request & {
@@ -70,4 +70,26 @@ export class TicketsController {
         const userInfo: AuthenticatedUser = req.user;
         return this.ticketsService.editstatus(id, payload, userInfo);
     }
-}
+
+    @Patch(':id')
+    @Version('1')
+    @UseGuards(JwtGuard)
+    editTicket(
+        @Param('id', ParseUUIDPipe) id: string,
+        @Body(
+            new ValidationPipe({
+                whitelist: true,
+                transform: true,
+                exceptionFactory: () =>
+                    new BadRequestException({
+                        statusCode: 400,
+                        error: 'Petición inválida',
+                        message: 'Los parámetros contienen valores no válidos.',
+                    }),
+            }),
+        ) payload: EditTicketDto,
+        @Req() req: RequestWithUser,) {
+        const currentUser: AuthenticatedUser = req.user;
+        return this.ticketsService.editTicket(id, payload, currentUser);
+    }
+} 
