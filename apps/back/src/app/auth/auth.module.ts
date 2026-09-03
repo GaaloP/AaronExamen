@@ -7,12 +7,13 @@ import { User } from '../users/user.entity';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
-import { JwtGuard } from './guards/jwt.guard';
+import { JwtGuard } from './guards/jwt-auth.guard';
+import { RolesGuard } from './guards/roles.guard';
 
 @Module({
     imports: [
         TypeOrmModule.forFeature([User]),
-        PassportModule,
+        PassportModule.register({ defaultStrategy: 'jwt' }),
         JwtModule.registerAsync({
             imports: [ConfigModule],
             inject: [ConfigService],
@@ -23,7 +24,7 @@ import { JwtGuard } from './guards/jwt.guard';
         }),
     ],
     controllers: [AuthController],
-    providers: [AuthService, JwtStrategy, JwtGuard],
-    exports: [JwtGuard, PassportModule],
+    providers: [AuthService, JwtStrategy, JwtGuard, RolesGuard],
+    exports: [JwtGuard, PassportModule, RolesGuard],
 })
 export class AuthModule { }

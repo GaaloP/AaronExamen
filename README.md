@@ -10,7 +10,7 @@ Utilizar estos comandos desde la raiz (`AaronExamen/`) del proyecto
     `npx nx dev front`
 - Levantar front y back al mismo tiempo:
 
-    `npx nx run-many --targets=dev,serve --projects=front,back --parallel=2`
+    `npx nx run-many --t dev,serve --p front,back`
 - Ejecutar pruebas unitarias:
 
     `npx nx test back`

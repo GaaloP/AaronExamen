@@ -440,10 +440,9 @@ El `ticketCode` no es un identificador en bd del ticekt, solo es un dato para vi
 Registro creado con éxito
 ```json
 {
-  "statusCode": 201,
-  "data": {
+  "ticket": {
     "uuid": "string (uuid)",
-    "ticketCode": "string",
+    "ticketCode": "int",
     "category": "string (enum Category)",
     "description": "string",
 		"assignedTo": "string (user.fullName)",

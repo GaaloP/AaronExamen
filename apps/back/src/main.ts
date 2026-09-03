@@ -1,4 +1,4 @@
-import { Logger, VersioningType } from '@nestjs/common';
+import { Logger, ValidationPipe, VersioningType } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app/app.module';
 import { HttpExceptionFilter } from './app/common/filters/http-exception.filter';
@@ -12,6 +12,12 @@ async function bootstrap() {
     defaultVersion: '1',
     prefix: 'v',
   });
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+    }),
+  );
   app.useGlobalFilters(new HttpExceptionFilter());
   const port = process.env.PORT || 3001;
   await app.listen(port);
