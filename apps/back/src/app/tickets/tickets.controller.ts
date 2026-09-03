@@ -1,10 +1,11 @@
-import { BadRequestException, Controller, Get, Query, Req, Version, ValidationPipe, UseGuards, Param, ParseUUIDPipe, Patch, Body } from '@nestjs/common';
+import { BadRequestException, Controller, Get, Query, Req, Version, ValidationPipe, Param, ParseUUIDPipe, Patch, Body } from '@nestjs/common';
 import type { Request } from 'express';
 import { GetTicketsQueryDto } from './dto/get-tickets-query.dto';
-import { TicketsService } from './ticket.services';
-import { JwtGuard } from '../auth/guards/jwt-auth.guard';
-import { EditStatusDto, EditTicketDto } from './dto/edit-state.dto';
+import { TicketsService } from './tickets.service';
+import { EditStatusDto, EditTicketDto } from './dto/edit-ticket.dto';
 import { AuthenticatedUser } from './dto/autenticated-user.dto';
+import { Auth } from '../auth/decorators/auth.decorator';
+import { UserRole } from '../users/user.entity';
 
 type RequestWithUser = Request & {
     user: { uuid: string; email: string; role: string };
@@ -16,7 +17,7 @@ export class TicketsController {
 
     @Get()
     @Version('1')
-    @UseGuards(JwtGuard)
+    @Auth(UserRole.SUPERVISOR, UserRole.AGENT)
     findAll(
         @Query(
             new ValidationPipe({
@@ -38,7 +39,7 @@ export class TicketsController {
 
     @Get(':id')
     @Version('1')
-    @UseGuards(JwtGuard)
+    @Auth(UserRole.SUPERVISOR, UserRole.AGENT)
     getTicketById(
         @Param('id', ParseUUIDPipe) id: string,
         @Req() req: RequestWithUser,
@@ -49,7 +50,7 @@ export class TicketsController {
 
     @Patch(':id/status')
     @Version('1')
-    @UseGuards(JwtGuard)
+    @Auth(UserRole.SUPERVISOR, UserRole.AGENT)
     editStatus(
         @Param('id', ParseUUIDPipe) id: string,
         @Body(
@@ -73,7 +74,7 @@ export class TicketsController {
 
     @Patch(':id')
     @Version('1')
-    @UseGuards(JwtGuard)
+    @Auth(UserRole.SUPERVISOR, UserRole.AGENT)
     editTicket(
         @Param('id', ParseUUIDPipe) id: string,
         @Body(

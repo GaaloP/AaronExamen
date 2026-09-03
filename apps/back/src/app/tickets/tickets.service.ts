@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Ticket, TicketStatus } from './entities/ticket.entity';
+import { Ticket, TicketCategory, TicketStatus } from './entities/ticket.entity';
 import { GetTicketsQueryDto } from './dto/get-tickets-query.dto';
 import { History } from './entities/history.entity';
-import { EditStatusDto, EditTicketDto } from './dto/edit-state.dto';
+import { EditStatusDto, EditTicketDto } from './dto/edit-ticket.dto';
 import { AuthenticatedUser } from './dto/autenticated-user.dto';
 
 
@@ -201,7 +201,7 @@ export class TicketsService {
                     category: ticket.category,
                     description: ticket.description,
                     assignedTo: ticket.assignedTo?.fullName || null,
-                    createdAt: ticket.openAt,
+                    createdAt: ticket.createdAt,
                     createdBy: ticket.assignedTo?.fullName || null,
                     status: newStatus,
                     closedAt: newStatus === TicketStatus.CLOSED ? new Date().toISOString() : '',
@@ -222,7 +222,7 @@ export class TicketsService {
             .createQueryBuilder()
             .update(Ticket)
             .set({
-                category: payload.category,
+                category: payload.category == typeof TicketCategory ? TicketCategory[payload.category] as any : undefined,
                 description: payload.description,
                 assignedTo: payload.assignedToUuid ? { uuid: payload.assignedToUuid } as any : undefined
             })
