@@ -2,7 +2,7 @@ import { BadRequestException, Controller, Get, Query, Req, Version, ValidationPi
 import type { Request } from 'express';
 import { GetTicketsQueryDto } from './dto/get-tickets-query.dto';
 import { TicketsService } from './ticket.services';
-import { JwtGuard } from '../auth/guards/jwt.guard';
+import { JwtGuard } from '../auth/guards/jwt-auth.guard';
 import { EditStatusDto, EditTicketDto } from './dto/edit-state.dto';
 import { AuthenticatedUser } from './dto/autenticated-user.dto';
 
