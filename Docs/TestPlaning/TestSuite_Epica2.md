@@ -81,7 +81,16 @@ Condiciones específicas de esta suite:
 | HU Edición / cambio de estado | Transiciones inválidas y reabrir cerrado | CP-04 |
 | HU Edición | Permisos de edición según rol y propiedad | CP-05 |
 
-## 8. Casos de prueba prioritarios (críticos y altos)
+## 8. Hallazgos técnicos detectados durante análisis
+
+| ID | Hallazgo detectado | Impacto | Severidad | Recomendación |
+|---|---|---|---|---|
+| H-01 | No existe `POST /api/v1/tickets`, aunque la HU de creación y el contrato lo exigen. | El flujo de creación del ticket no puede completarse. | Crítico | Agregar caso de prueba de creación y validar el endpoint real antes de cierre. |
+| H-02 | No existe `GET /api/v1/agents` para catálogo de agentes, requisito del detalle y reasignación. | No se puede reasignar ni validar asignación correcta. | Crítico | Agregar caso de prueba de catálogo y de reasignación con usuarios válidos. |
+| H-03 | La lógica de estados define `CLOSED: []` y no distingue permisos por rol para reabrir, aunque la documentación lo exige. | Puede bloquear o permitir transiciones incorrectas. | Crítico | Agregar casos de prueba de reabrir y de permisión de Supervisor. |
+| H-04 | `editTicket` no valida si el ticket está cerrado ni si `assignedToUuid` existe en la base de datos. | Se puede editar o reasignar recursos inválidos o cerrados. | Crítico | Agregar casos de prueba de edición cerrada y reasignación a UUID inexistente. |
+
+## 9. Casos de prueba prioritarios (críticos y altos)
 
 | ID | Qué se va a probar | Técnica | Módulo | Tipo de prueba | Prioridad | Criterio de cierre | Ejecutado | Resultado | Comentarios | Evidencia |
 |---|---|---|---|---|---|---|---|---|---|---|
@@ -90,16 +99,21 @@ Condiciones específicas de esta suite:
 | CP-03 | Validar las transiciones de estado permitidas según la regla de negocio: `Open -> InProgress` y `InProgress -> Closed`. | Partición de equivalencia (clase válida) | Cambio de estado | Unitaria backend + manual FE | Crítico | Se cierra cuando ambas transiciones son aceptadas y el historial refleja el cambio con el estado anterior y nuevo correctos. | Sí | Aprobado | Se validó la clase válida de transiciones y el servicio responde `200` con `editedTicket.status` actualizado. | `apps/back/src/app/tickets/tests/isolation-guard/isolation-guard.spec.ts` |
 | CP-04 | Validar las transiciones prohibidas y la no reapertura de un ticket cerrado: `Open -> Closed`, `InProgress -> Open`, `Closed -> Open`. | Partición de equivalencia (clase inválida) | Cambio de estado | Unitaria backend + manual FE | Crítico | Se cierra cuando todas las transiciones inválidas fallan con 409 y el agente no puede reabrir un ticket cerrado. | Sí | Aprobado | Se validó la clase inválida con `409` para transiciones no permitidas y reabrir un ticket cerrado. | `apps/back/src/app/tickets/tests/isolation-guard/isolation-guard.spec.ts` |
 | CP-05 | Validar que un Agente no puede editar ni reasignar tickets que no son suyos, y que un Supervisor sí puede hacerlo. | Partición de equivalencia (rol × propiedad) | Edición del ticket | Funcional manual (Frontend) + integración backend | Alto | Se cierra cuando la edición de tickets ajenos para Agente es bloqueada y la edición por Supervisor se permite solo bajo permisos correctos. | Sí | Aprobado | Se validó en backend que un agente no puede reasignar a otro usuario y el servicio devuelve `403`. | `apps/back/src/app/tickets/tests/isolation-guard/isolation-guard.spec.ts` |
+| CP-06 | Validar que el endpoint de creación de tickets exista y respete la autoasignación del Agente y la asignación del Supervisor. | Tabla de decisión (rol × asignación) | Creación de tickets | Integración backend | Crítico | Se cierra cuando el endpoint está implementado, acepta payload válido, y asigna el ticket al usuario correcto o rechaza la petiición indebida. | No | Pendiente | Hallazgo crítico por ausencia de `POST /api/v1/tickets` en backend. | N/A |
+| CP-07 | Validar el endpoint de catálogo de agentes para reasignación. | Partición de equivalencia (agente existente vs. inexistente) | Detalle / reasignación | Integración backend | Crítico | Se cierra cuando el endpoint devuelve la lista de agentes y rechaza peticiones de un Agente sin permisos. | No | Pendiente | Hallazgo crítico por ausencia de `GET /api/v1/agents`. | N/A |
+| CP-08 | Validar la re-apertura de un ticket cerrado por Supervisor y bloqueo para Agente. | Partición de equivalencia (rol × estado) | Cambio de estado | Unitaria backend + manual FE | Crítico | Se cierra cuando el Supervisor puede reabrir y el Agente recibe `403` o `409` según la regla de negocio. | No | Pendiente | La lógica actual no distingue permisos por rol para `CLOSED -> OPEN` ni `CLOSED -> IN_PROGRESS`. | N/A |
+| CP-09 | Validar que un ticket cerrado no pueda editarse sin reabrirse antes. | Partición de equivalencia (estado cerrado vs. activo) | Edición de tickets | Integración backend | Crítico | Se cierra cuando cualquier intento de edición sobre un ticket cerrado responde error y no se guardan cambios. | No | Pendiente | Hallazgo detectado por falta de validación en `editTicket`. | N/A |
+| CP-10 | Validar que `assignedToUuid` sea un usuario existente antes de reasignar. | Error guessing + partición de equivalencia | Reasignación | Integración backend | Crítico | Se cierra cuando un UUID inexistente devuelve `404` y no deja asignar un ticket a un agente que no existe. | No | Pendiente | La lógica actual no valida la existencia del agente destino. | N/A |
 
-## 9. Resumen de cobertura
+## 10. Resumen de cobertura
 
 | Métrica | Valor |
 |---|---|
-| Total de casos diseñados | 5 |
-| Casos críticos | 4 |
-| Casos de prioridad alta | 1 |
+| Total de casos diseñados | 10 |
+| Casos críticos | 8 |
+| Casos de prioridad alta | 2 |
 | Casos ejecutados | 5 |
 | Casos aprobados | 5 |
 | Casos fallidos | 0 |
 | Casos bloqueados | 0 |
-| Criterio de cierre de la suite | Se aprueba cuando los 5 casos prioritarios quedan verdes, la regla de aislamiento por agente está validada en backend y las transiciones de estado cumplen la partición de equivalencia. |
+| Criterio de cierre de la suite | Se aprueba cuando los 10 casos prioritarios quedan verdes, el flujo de creación y reasignación real está implementado y la re-apertura de tickets desde estado cerrado queda validada por rol. |

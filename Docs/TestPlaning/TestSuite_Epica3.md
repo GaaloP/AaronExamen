@@ -55,6 +55,13 @@ Condiciones específicas de esta suite:
 | Cálculos de métricas incorrectos | Media | Alto | Crítico | CP-02, CP-03, CP-04 |
 | Datos stale o no actualizados al abrir el dashboard | Media | Medio | Alto | CP-05 |
 
+## 6. Hallazgos técnicos detectados durante análisis
+
+| ID | Hallazgo detectado | Impacto | Severidad | Recomendación |
+|---|---|---|---|---|
+| H-01 | No existe la API de métricas ni el módulo de dashboard en backend. | No se puede validar conteo, promedio ni actualización real del dashboard. | Crítico | Mantener como caso pendiente y validación manual hasta que exista implementación. |
+| H-02 | El caso de acceso por rol sí fue automatizable, pero el resto de métricas requieren backend implementado. | La suite no puede cerrarse como funcional completa. | Alto | Separar validación de permisos de validación de métricas. |
+
 ## 7. Matriz de trazabilidad (criterios de aceptación → casos prioritarios)
 
 | HU | Criterio clave | Caso(s) apoyados |
@@ -64,26 +71,28 @@ Condiciones específicas de esta suite:
 | HU03 | Suma y promedio de tiempo de cierre | CP-03 |
 | HU03 | Exclusión de tickets no cerrados | CP-04 |
 | HU03 | Datos recientes al entrar al dashboard | CP-05 |
+| HU03 | API de métricas no implementada | H-01, CP-06 |
 
 ## 8. Casos de prueba prioritarios (críticos y altos)
 
 | ID | Qué se va a probar | Técnica | Módulo | Tipo de prueba | Prioridad | Criterio de cierre | Ejecutado | Resultado | Comentarios | Evidencia |
 |---|---|---|---|---|---|---|---|---|---|---|
-| CP-01 | Validar que el Dashboard es accesible solo para Supervisor. | Partición de equivalencia (rol Supervisor vs. Agente) | Dashboard de métricas | Funcional manual (Frontend) + integración backend | Crítico | Se cierra cuando el Supervisor entra y el Agente es bloqueado/redirigido, sin ver valores del dashboard. |  |  |  |  |
-| CP-02 | Validar el conteo correcto de tickets por estado: abiertos, en progreso y cerrados. | Partición de equivalencia (estado) | Dashboard de métricas | Unitaria + integración backend | Alto | Se cierra cuando el número mostrado coincide con los tickets reales y cada estado tiene su conteo exacto. |  |  |  |  |
-| CP-03 | Validar el cálculo de suma y promedio del tiempo de cierre de tickets cerrados. | Partición de equivalencia + prueba unitaria | Dashboard de métricas | Unitaria backend | Crítico | Se cierra cuando la suma y el promedio coinciden con el cálculo manual esperado y se calculan por funciones separadas. |  |  |  |  |
-| CP-04 | Validar que los tickets abiertos o en proceso no se incluyan en el promedio de cierre. | Análisis de valores límite + partición de equivalencia | Dashboard de métricas | Unitaria + integración backend | Alto | Se cierra cuando el promedio considera solo tickets cerrados y evita distorsiones por estados no cerrados. |  |  |  |  |
-| CP-05 | Validar que los indicadores del dashboard se actualizan al entrar y se muestran con datos recientes. | Error guessing + integración | Dashboard de métricas | Funcional manual (Frontend) + integración backend | Alto | Se cierra cuando al ingresar nuevamente el dashboard refleja el último estado real del sistema sin stale data. |  |  |  |  |
+| CP-01 | Validar que el Dashboard es accesible solo para Supervisor. | Partición de equivalencia (rol Supervisor vs. Agente) | Dashboard de métricas | Funcional manual (Frontend) + integración backend | Crítico | Se cierra cuando el Supervisor entra y el Agente es bloqueado/redirigido, sin ver valores del dashboard. | Sí | Aprobado | La regla de acceso por rol quedó validada en backend con un test unitario de autorización. | `apps/back/src/app/dashboard/tests/backend-dashboard-role/backend-dashboard-role.spec.ts` |
+| CP-02 | Validar el conteo correcto de tickets por estado: abiertos, en progreso y cerrados. | Partición de equivalencia (estado) | Dashboard de métricas | Unitaria + integración backend | Alto | Se cierra cuando el número mostrado coincide con los tickets reales y cada estado tiene su conteo exacto. | No | No automatizable aún | La API de métricas no existe en backend; no hay servicio ni endpoint implementado. | N/A |
+| CP-03 | Validar el cálculo de suma y promedio del tiempo de cierre de tickets cerrados. | Partición de equivalencia + prueba unitaria | Dashboard de métricas | Unitaria backend | Crítico | Se cierra cuando la suma y el promedio coinciden con el cálculo manual esperado y se calculan por funciones separadas. | No | No automatizable aún | El backend no expone ni implementa la lógica de métricas ni el endpoint del dashboard. | N/A |
+| CP-04 | Validar que los tickets abiertos o en proceso no se incluyan en el promedio de cierre. | Análisis de valores límite + partición de equivalencia | Dashboard de métricas | Unitaria + integración backend | Alto | Se cierra cuando el promedio considera solo tickets cerrados y evita distorsiones por estados no cerrados. | No | No automatizable aún | El servicio de métricas aún no existe y el endpoint no está disponible. | N/A |
+| CP-05 | Validar que los indicadores del dashboard se actualizan al entrar y se muestran con datos recientes. | Error guessing + integración | Dashboard de métricas | Funcional manual (Frontend) + integración backend | Alto | Se cierra cuando al ingresar nuevamente el dashboard refleja el último estado real del sistema sin stale data. | No | No automatizable aún | Faltan el módulo de dashboard y el backend de métricas para ejecutar esta validación automatizada. | N/A |
+| CP-06 | Validar que el backend exponga el endpoint de métricas y que solo Supervisores puedan consumirlo. | Partición de equivalencia + error guessing | Dashboard / API | Integración backend | Crítico | Se cierra cuando el endpoint está disponible y responde con autorización correcta para rol Supervisor y rechazo para Agente. | No | Pendiente | Este caso quedó como requisito funcional crítico y actualmente no existe la implementación. | N/A |
 
 ## 9. Resumen de cobertura
 
 | Métrica | Valor |
 |---|---|
-| Total de casos diseñados | 5 |
-| Casos críticos | 2 |
+| Total de casos diseñados | 6 |
+| Casos críticos | 3 |
 | Casos de prioridad alta | 3 |
-| Casos ejecutados | 0 |
-| Casos aprobados | 0 |
+| Casos ejecutados | 1 |
+| Casos aprobados | 1 |
 | Casos fallidos | 0 |
 | Casos bloqueados | 0 |
-| Criterio de cierre de la suite | Se aprueba cuando los 5 casos prioritarios quedan verdes, el dashboard solo es accesible para Supervisor y los cálculos de métricas coinciden con la realidad del sistema. |
+| Criterio de cierre de la suite | Se aprueba solo parcialmente: el control de acceso por rol queda validado en backend; el resto del dashboard queda pendiente hasta que exista la API, los servicios de métricas y el módulo funcional del dashboard. |

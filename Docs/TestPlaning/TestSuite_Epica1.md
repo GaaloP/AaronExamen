@@ -64,7 +64,14 @@ Condiciones específicas de esta suite:
 | HU Protección de rutas | Bloqueo de acceso cruzado por rol | CP-03 |
 | HU Protección de rutas | Validación del backend sin FE | CP-04 |
 
-## 8. Casos de prueba prioritarios (críticos y altos)
+## 8. Hallazgos técnicos detectados durante análisis
+
+| ID | Hallazgo detectado | Impacto | Severidad | Recomendación |
+|---|---|---|---|---|
+| H-01 | El backend usa `role === 'user'` para identificar al Agente, pero la semántica del negocio y el seed no son consistentes (`agente` vs `user`). | Puede bloquear o permitir accesos incorrectos por rol. | Crítico | Agregar caso de prueba de normalización de roles y validación del JWT en backend. |
+| H-02 | El flujo de rutas protegidas requiere validación manual en navegador para confirmar redirección real; la regla backend no reemplaza la validación de UI. | Riesgo de UX y de acceso cruzado si la navegación se rompe. | Crítico | Mantener la validación visual en frontend y el chequeo backend como complemento. |
+
+## 9. Casos de prueba prioritarios (críticos y altos)
 
 | ID | Qué se va a probar | Técnica | Módulo | Tipo de prueba | Prioridad | Criterio de cierre | Ejecutado | Resultado | Comentarios | Evidencia |
 |---|---|---|---|---|---|---|---|---|---|---|
@@ -72,16 +79,18 @@ Condiciones específicas de esta suite:
 | CP-02 | Verificar que credenciales incorrectas no permiten acceder y muestran el error esperado. | Partición de equivalencia (válido vs. inválido) | Login | Funcional (manual FE + integración backend) | Crítico | Se cierra cuando la combinación inválida devuelve error consistente y no se genera sesión ni acceso a rutas protegidas. | Sí | Aprobado | Se validó que usuario inexistente y contraseña incorrecta lanzan `UnauthorizedException` con el mensaje esperado. | `apps/back/src/app/auth/tests/backend-auth-security/backend-auth-security.spec.ts` |
 | CP-03 | Validar bloqueo del acceso cruzado entre roles usando URL directa y sesiones autenticadas. | Partición de equivalencia + error guessing | Protección de rutas | Funcional manual (Frontend) + integración backend | Crítico | Se cierra cuando Agente no entra a rutas de Supervisor y viceversa, con redirección o 403, sin exponer datos del otro rol. | No | Manual FE | No es automatizable en backend puro; requiere flujo real del navegador y validación de routing. | N/A |
 | CP-04 | Validar que el backend rechaza acceso directo a recursos protegidos aunque se bypassée la interfaz. | Error guessing + partición de equivalencia | Protección de rutas | Integración backend | Crítico | Se cierra cuando cualquier petición directa con token de un rol sin permiso devuelve 403/401 y no expone datos ajenos. | Sí | Aprobado | Se validó la regla de aislamiento que bloquea acceso a ticket ajeno para Agente con `403` y sin exponer datos. | `apps/back/src/app/tickets/tests/isolation-guard/isolation-guard.spec.ts` |
+| CP-05 | Validar que el rol `agente` y el rol `user` son tratados de forma homogénea en backend y no provocan errores de autorización. | Partición de equivalencia (roles equivalentes) | Seguridad / auth | Integración backend | Crítico | Se cierra cuando el servicio normaliza y autoriza correctamente ambos nombres de rol y no deja usuarios sin permisos ni con acceso indebido. | No | Pendiente | Hallazgo detectado por análisis técnico; requiere validación real de seed y token. | N/A |
+| CP-06 | Validar el caso de Supervisor intentando acceder a una vista o recurso exclusivo de Agente. | Error guessing + partición de equivalencia | Protección de rutas | Funcional manual (Frontend) + integración backend | Alto | Se cierra cuando supervisor no puede acceder a vistas exclusivas de Agente y recibe bloqueo, redirección o 403. | No | Pendiente | El comportamiento no quedó definido en la HU y debe confirmarse con el PO. | N/A |
 
-## 9. Resumen de cobertura
+## 10. Resumen de cobertura
 
 | Métrica | Valor |
 |---|---|
-| Total de casos diseñados | 4 |
-| Casos críticos | 4 |
-| Casos de prioridad alta | 0 |
+| Total de casos diseñados | 6 |
+| Casos críticos | 5 |
+| Casos de prioridad alta | 1 |
 | Casos ejecutados | 3 |
 | Casos aprobados | 3 |
 | Casos fallidos | 0 |
 | Casos bloqueados | 0 |
-| Criterio de cierre de la suite | Se aprueba cuando los casos backend automatizados quedan verdes y el caso de acceso cruzado por ruta sigue validándose manualmente en frontend con el flujo real del usuario. |
+| Criterio de cierre de la suite | Se aprueba cuando los casos backend automatizados quedan verdes y los casos de acceso cruzado por rol y normalización de usuarios se validan manualmente con el flujo real del usuario. |
