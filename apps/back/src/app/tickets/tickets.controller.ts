@@ -1,11 +1,11 @@
 import { BadRequestException, Controller, Get, Query, Req, Version, ValidationPipe, Param, ParseUUIDPipe, Patch, Body } from '@nestjs/common';
 import type { Request } from 'express';
-import { GetTicketsQueryDto } from './dto/get-tickets-query.dto';
 import { TicketsService } from './tickets.service';
-import { EditStatusDto, EditTicketDto } from './dto/edit-ticket.dto';
-import { AuthenticatedUser } from './dto/autenticated-user.dto';
 import { Auth } from '../auth/decorators/auth.decorator';
 import { UserRole } from '../users/user.entity';
+import type { GetPaginatedTicketsDto } from './dto/get-tickets-query.dto';
+import type { EditStatusDto } from './dto/edit-ticket-status.dto';
+import type { EditTicketDto } from './dto/edit-ticket.dto';
 
 type RequestWithUser = Request & {
     user: { uuid: string; email: string; role: string };
@@ -29,11 +29,10 @@ export class TicketsController {
                         message: 'Los parámetros de búsqueda contienen valores no válidos.',
                     }),
             }),
-        )
-        query: GetTicketsQueryDto,
+        ) query: GetPaginatedTicketsDto,
         @Req() req: RequestWithUser,
     ) {
-        const currentUser: AuthenticatedUser = req.user;
+        const currentUser = req.user;
         return this.ticketsService.findAll(query, currentUser);
     }
 
@@ -44,7 +43,7 @@ export class TicketsController {
         @Param('id', ParseUUIDPipe) id: string,
         @Req() req: RequestWithUser,
     ) {
-        const currentUser: AuthenticatedUser = req.user;
+        const currentUser = req.user;
         return this.ticketsService.getTicketById(id, currentUser);
     }
 
@@ -68,7 +67,7 @@ export class TicketsController {
         payload: EditStatusDto,
         @Req() req: RequestWithUser
     ) {
-        const userInfo: AuthenticatedUser = req.user;
+        const userInfo = req.user;
         return this.ticketsService.editstatus(id, payload, userInfo);
     }
 
@@ -90,7 +89,7 @@ export class TicketsController {
             }),
         ) payload: EditTicketDto,
         @Req() req: RequestWithUser,) {
-        const currentUser: AuthenticatedUser = req.user;
+        const currentUser = req.user;
         return this.ticketsService.editTicket(id, payload, currentUser);
     }
 } 
