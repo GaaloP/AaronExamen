@@ -5,7 +5,6 @@ import { AuthUserDto, LoginRequestDto } from '../../contracts/auth.contract';
 const SESSION_KEY = 'ticheck_session';
 const SESSION_TTL_MS = 24 * 60 * 60 * 1000;
 
-// 👇 nuevo: tipos con nombre en vez de objetos inline en el genérico
 interface LoginFulfilledPayload {
   accessToken: string;
   user: AuthUserDto;
@@ -15,7 +14,8 @@ interface LoginThunkConfig {
   rejectValue: string;
 }
 
-interface AuthState {
+// AQUÍ ESTÁ LA CORRECCIÓN: Se agregó "export"
+export interface AuthState {
   accessToken: string | null;
   user: AuthUserDto | null;
   expiresAt: number | null;
