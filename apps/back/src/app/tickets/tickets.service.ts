@@ -1,4 +1,10 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+    ConflictException,
+    ForbiddenException,
+    Injectable,
+    InternalServerErrorException,
+    NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Ticket, TicketStatus } from './entities/ticket.entity';
@@ -73,20 +79,12 @@ export class TicketsService {
             .getOne();
 
         if (!ticket) {
-            return {
-                statusCode: 404,
-                error: 'No encontrado',
-                message: `Ticket con uuid ${id} no encontrado.`,
-            };
+            throw new NotFoundException(`Ticket con uuid ${id} no encontrado.`);
         }
 
         if (currentUser.role === UserRole.AGENT) {
             if (ticket.assignedTo?.uuid !== currentUser.uuid) {
-                return {
-                    statusCode: 403,
-                    error: 'Acceso denegado',
-                    message: 'No cuentas con los permisos necesarios para acceder a este recurso.',
-                };
+                throw new ForbiddenException('No cuentas con los permisos necesarios para acceder a este recurso.');
             }
         }
 
@@ -133,20 +131,12 @@ export class TicketsService {
             .getOne();
 
         if (!ticket) {
-            return {
-                statusCode: 404,
-                error: 'No encontrado',
-                message: `El ticket con uuid ${id} no existe.`,
-            };
+            throw new NotFoundException(`El ticket con uuid ${id} no existe.`);
         }
 
         if (currentUser.role === UserRole.AGENT) {
             if (ticket.assignedTo?.uuid !== currentUser.uuid) {
-                return {
-                    statusCode: 403,
-                    error: 'Acceso denegado',
-                    message: 'No cuentas con los permisos necesarios para crear este recurso.',
-                };
+                throw new ForbiddenException('No cuentas con los permisos necesarios para crear este recurso.');
             }
         }
 
@@ -160,11 +150,7 @@ export class TicketsService {
         const newStatus = payload.status as TicketStatus;
 
         if (!validTransitions[currentStatus]?.includes(newStatus)) {
-            return {
-                statusCode: 409,
-                error: 'Conflicto de registro',
-                message: 'No se pudo editar estado porque no se cumple con la regla de transiciones',
-            };
+            throw new ConflictException('No se pudo editar estado porque no se cumple con la regla de transiciones');
         }
 
         try {
@@ -204,11 +190,7 @@ export class TicketsService {
             };
 
         } catch (error) {
-            return {
-                statusCode: 500,
-                error: 'Error interno del servidor',
-                message: 'Ocurrió un error inesperado al procesar la solicitud.',
-            };
+            throw new InternalServerErrorException('Ocurrió un error inesperado al procesar la solicitud.');
         }
     }
 
@@ -220,28 +202,16 @@ export class TicketsService {
             .getOne();
 
         if (!currentTicket) {
-            return {
-                statusCode: 404,
-                error: 'No encontrado',
-                message: `El ticket con uuid ${id} no existe.`,
-            };
+            throw new NotFoundException(`El ticket con uuid ${id} no existe.`);
         }
 
         if (currentUser.role === UserRole.AGENT) {
             if (currentTicket.assignedTo?.uuid !== currentUser.uuid) {
-                return {
-                    statusCode: 403,
-                    error: 'Acceso denegado',
-                    message: 'No cuentas con los permisos necesarios para editar este recurso.',
-                };
+                throw new ForbiddenException('No cuentas con los permisos necesarios para editar este recurso.');
             }
 
             if (payload.assignedToUuid !== undefined) {
-                return {
-                    statusCode: 403,
-                    error: 'Acceso denegado',
-                    message: 'Los agentes no pueden reasignar tickets.',
-                };
+                throw new ForbiddenException('Los agentes no pueden reasignar tickets.');
             }
         }
 
@@ -256,11 +226,7 @@ export class TicketsService {
             .where('uuid = :id', { id })
             .execute();
         if (ticket.affected === 0) {
-            return {
-                statusCode: 404,
-                error: 'No encontrado',
-                message: `El ticket con uuid ${id} no existe.`,
-            };
+            throw new NotFoundException(`El ticket con uuid ${id} no existe.`);
         }
 
         const ticketActualizado = await this.ticketRepository
