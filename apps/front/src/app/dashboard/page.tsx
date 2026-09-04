@@ -29,7 +29,7 @@ export default function DashboardPage() {
   const { user, accessToken } = useSelector((s: RootState) => s.auth);
   const { list } = useSelector((s: RootState) => s.tickets);
 
-  useEffect(() => {
+  useEffect(() => { //aqui vamos a redirigir al login al login si no hay token y si el usuario no es supervisor
     if (!accessToken) {
       router.replace('/login');
       return;

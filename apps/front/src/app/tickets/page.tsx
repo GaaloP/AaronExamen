@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { 
   Box, Typography, List, ListItemButton, ListItemIcon, ListItemText,
   Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  TablePagination, FormControl, InputLabel, Select, MenuItem, Chip,
+  TablePagination, FormControl, InputLabel, Select, MenuItem, Chip, //todo lo que se agrego de muui
   Button, Dialog, DialogTitle, DialogContent, DialogActions
 } from '@mui/material';
 import GridViewIcon from '@mui/icons-material/GridView';
@@ -85,9 +85,9 @@ export default function TicketsPage() {
         </List>
       </Box>
 
-      {/* Contenido Principal */}
+      {/* contenido principal */}
       <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', bgcolor: '#f5f5f5' }}>
-        {/* Barra superior */}
+        {/* barra o layout superior */}
         <Box
           sx={{
             height: 56,

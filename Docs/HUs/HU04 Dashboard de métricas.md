@@ -1,4 +1,4 @@
-# HU03 Dashboard de métricas
+# HU04 Dashboard de métricas
 
 Como: Supervisor
 
@@ -27,3 +27,20 @@ Después de recibir un nuevo cambio correctamente desde el backend, el historial
 
 ## AC6 Error
 Si ocurre un error al obtener el detalle o historial, debe mostrarse un mensaje de error y una opción para reintentar.
+
+## Notas Técnicas 
+* **Método y Endpoint:** `GET /api/v1/metrics`
+* **Headers:** `Authorization: Bearer <token>`
+* **Query Params / Body:** Este endpoint no recibe parámetros en la URL ni body en la petición.
+* **Respuesta Exitosa (HTTP 200):**
+  ```json
+  {
+    "statusCode": 200,
+    "data": {
+      "openedTicketsCount": "number",
+      "inProgressTicketsCount": "number",
+      "closedTicketsCount": "number",
+      "averageSolutionTime": "number"
+    }
+  }
+Manejo de Respuestas de Error:  HTTP 400 (Petición inválida): Se retorna si la URL contiene query params innecesarios o no válidos.  HTTP 401 (No autenticado): Se retorna si el token de autenticación no fue proporcionado, expiró o no es válido.  HTTP 403 (Acceso denegado): Se retorna si un usuario con rol "agente" intenta acceder a este endpoint (pantalla restringida a supervisores).  HTTP 500 (Error interno): Error inesperado del servidor al procesar la solicitud.  

@@ -1,4 +1,4 @@
-# HU Creación de tickets 
+# HU06 Creación de tickets 
 
 Como: Agente o Supervisor
 
@@ -16,16 +16,53 @@ Diseño en figma de formulario de creación de ticket https://www.figma.com/desi
 
 ## Notas técnicas:
 
-- Discutir si conviene obtener catálogos desde el back o harcodealos en front
-- Como se obendran lso catalogos, como se guardara la infodel formualrio en el redux?
-
-
+* **Manejo de Catálogos:**
+  * Los catálogos de **Categoría** y **Estado** están **hardcodeados en el frontend**
+  * El catálogo de **Agentes** (para asignar tickets) se obtiene mediante consulta al backend (`GET /api/v1/agents/`)
+* **Endpoint Catálogo de Agentes (solo Supervisor):** `GET /api/v1/agents/`
+  * **Headers:** `Authorization: Bearer <token>`
+  * **Respuesta Exitosa (200):** Devuelve un arreglo de objetos `[ { "uuid": "string", "fullName": "string" } ]`
+  * **Error 403:** Si un Agente intenta consultar este endpoint
+* **Endpoint Creación de Ticket:** `POST /api/v1/tickets`
+  * **Headers:** `Authorization: Bearer <token>`, `Content-Type: application/json`
+  * **Payload (Request Body):**
+    ```json
+    {
+      "category": "string",
+      "description": "string",
+      "assignedToUuid?": "string"
+    }
+    ```
+  * **Regla de Negocio:**
+    * Si la petición la realiza un **Agente**, el campo `assignedToUuid` **no debe enviarse en el body**. El backend se encarga de asignar automáticamente el ticket al mismo agente basándose en el token
+    * Si la petición la realiza un **Supervisor**, se debe incluir en `assignedToUuid` el id del agente seleccionado
+* **Respuesta Exitosa (HTTP 201):**
+  ```json
+  {
+    "statusCode": 201,
+    "data": {
+      "uuid": "string",
+      "ticketCode": "string",
+      "category": "string",
+      "description": "string",
+      "assignedTo": {
+        "uuid": "string",
+        "fullName": "string"
+      },
+      "createdAt": "string (ISO 8601)",
+      "createdBy": {
+        "uuid": "string",
+        "fullName": "string"
+      },
+      "updatedAt": "string (ISO 8601)",
+      "status": "string",
+      "closedAt": "string (ISO 8601)"
+    }
+  }
 
 ---
 
 ## Notas de QA:
-
-blah blah
 
 ---
 

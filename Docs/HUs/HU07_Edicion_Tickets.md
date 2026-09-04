@@ -1,4 +1,4 @@
-# HU Edición de tickets 
+# HU07 Edición de tickets 
 
 Como: Agente o Supervisor
 
@@ -16,7 +16,43 @@ Diseño en figma de formulario de edición de ticket https://www.figma.com/desig
 
 ## Notas técnicas:
 
-blah blah
+* **Endpoint 1: Editar Datos del Ticket** (`PATCH /api/v1/tickets/:uuid`)
+  * **Headers:** `Authorization: Bearer <token>`, `Content-Type: application/json`
+  * **Payload (Request Body):**
+    ```json
+    {
+      "category?": "string",
+      "description?": "string",
+      "assignedToUuid?": "string",
+      "comment?": "string"
+    }
+    ```
+  * **Respuesta Exitosa (HTTP 200):** Retorna el objeto completo del ticket actualizado (`uuid`, `ticketCode`, `category`, `description`, `assignedTo`, `status`, `updatedBy`, `updatedAt`, `closedAt`)
+  * **Manejo de Errores de Edición:**
+    * **HTTP 400 (Petición inválida):** Body con formato no válido
+    * **HTTP 401 (No autorizado):** Token caducado, ausente o inválido
+    * **HTTP 403 (Acceso denegado):** Cuando un Agente intenta reasignar el ticket o editar tickets que no tiene asignados
+    * **HTTP 404 (No encontrado):** El ticket con el `uuid` proporcionado no existe en la BD
+    * **HTTP 409 (Conflicto):** Cuando un Supervisor intenta editar un ticket que se encuentra en estado **cerrado** (debe reabrirse primero)
+    * **HTTP 500 (Error interno):** Error del servidor
+
+* **Endpoint 2: Cambio de Estado del Ticket** (`PATCH /api/v1/tickets/:uuid/status`)
+  * **Headers:** `Authorization: Bearer <token>`, `Content-Type: application/json`
+  * **Payload (Request Body):**
+    ```json
+    {
+      "status": "string",
+      "comment?": "string"
+    }
+    ```
+  * **Reglas de Transición de Estado:**
+    * Abierto $\rightarrow$ En progreso
+    * En progreso $\rightarrow$ Cerrado
+    * En progreso $\rightarrow$ Abierto
+    * Cerrado $\rightarrow$ En progreso (Exclusivo para rol Supervisor)
+  * **Manejo de Errores en Cambio de Estado:**
+    * **HTTP 403 (Acceso denegado):** Cuando un Agente intenta cambiar el estado de un ticket que no tiene asignado.
+    * **HTTP 409 (Conflicto):** Si el estado intenta pasar directo de "Abierto" a "Cerrado", de "Cerrado" a "Abierto", o incumple las reglas de transición permitidas.
 
 ---
 
