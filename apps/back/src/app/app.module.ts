@@ -6,6 +6,7 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { TicketsModule } from './tickets/tickets.module';
 import { UsersModule } from './users/users.module';
+import { MetricsModule } from './metrics/metrics.module';
 
 @Module({
   controllers: [AppController],
@@ -28,7 +29,8 @@ import { UsersModule } from './users/users.module';
     }),
     AuthModule,
     TicketsModule,
-    UsersModule
+    UsersModule,
+    MetricsModule
   ],
 })
 export class AppModule { }
