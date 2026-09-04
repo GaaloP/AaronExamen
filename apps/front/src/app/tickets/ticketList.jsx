@@ -1,6 +1,5 @@
 // Ubicación: src/components/TicketList.jsx
 'use client';
-
 import { useState } from 'react'; //Ver modificaciones de datos
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';

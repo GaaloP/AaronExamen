@@ -1,4 +1,4 @@
-# HU01 Lista de Tickets
+# HU05 Lista de Tickets
 
 Como: Agente o Supervisor
 
@@ -43,3 +43,37 @@ Si el usuario corresponde a agente , la información recibida y mostrada debe co
 
 ## AC8: Detalle
 El usuario debe poder seleccionar cualquier ticket de la tabla y ver el detalle de cada uno.
+
+## Notas técnicas:
+
+* **Método y Endpoint:** `GET /api/v1/tickets`
+* **Headers:** `Authorization: Bearer <token>`
+* **Query Params:** `page`, `limit`, `status`
+* **Body:** No contiene body.
+* **Restricción por Rol:** El backend filtra los datos automáticamente basándose en el token suministrado (un agente recibirá únicamente sus tickets asignados; un supervisor obtendrá el listado global).
+* **Respuesta Exitosa (HTTP 200):**
+  ```json
+  {
+    "statusCode": 200,
+    "data": [
+      {
+        "uuid": "string",
+        "ticketCode": "number",
+        "category": "string",
+        "status": "string",
+        "assignedTo": {
+          "uuid": "string",
+          "fullName": "string"
+        }
+      }
+    ],
+    "meta": {
+      "total": "number",
+      "page": "number",
+      "limit": "number",
+      "totalPages": "number",
+      "hasPrevPage": "bool",
+      "hasNextPage": "bool"
+    }
+  }
+Manejo de Respuestas de Error:  HTTP 400 (Petición inválida): Se retorna si los parámetros de búsqueda (query params) contienen datos no válidos.HTTP 401 (No autenticado): El token no existe, expiró o tiene formato incorrecto[cite: 4].HTTP 500 (Error interno): Error del servidor al procesar la solicitud
