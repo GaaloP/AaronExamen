@@ -32,8 +32,7 @@ export class TicketsService {
             qb.andWhere('ticket.status = :status', { status: query.status });
         }
 
-        // Agentes solo ven sus propios tickets
-        if (currentUser.role?.toLowerCase() === 'user') {
+        if (currentUser.role === UserRole.AGENT) {
             qb.andWhere('assignedTo.uuid = :agentUuid', { agentUuid: currentUser.uuid });
         }
         qb.orderBy('ticket.createdAt', 'DESC')
@@ -81,8 +80,7 @@ export class TicketsService {
             };
         }
 
-        // Agentes solo pueden ver tickets asignados a ellos
-        if (currentUser.role?.toLowerCase() === 'user') {
+        if (currentUser.role === UserRole.AGENT) {
             if (ticket.assignedTo?.uuid !== currentUser.uuid) {
                 return {
                     statusCode: 403,
@@ -128,14 +126,12 @@ export class TicketsService {
     }
 
     async editstatus(id: string, payload: EditStatusDto, currentUser: AuthenticatedUser) {
-        // Obtener el ticket actual
         const ticket = await this.ticketRepository
             .createQueryBuilder('ticket')
             .leftJoinAndSelect('ticket.assignedTo', 'assignedTo')
             .where('ticket.uuid = :id', { id })
             .getOne();
 
-        // Validar que el ticket existe
         if (!ticket) {
             return {
                 statusCode: 404,
@@ -144,8 +140,7 @@ export class TicketsService {
             };
         }
 
-        // Validar permisos: agentes solo pueden editar sus propios tickets
-        if (currentUser.role?.toLowerCase() === 'user') {
+        if (currentUser.role === UserRole.AGENT) {
             if (ticket.assignedTo?.uuid !== currentUser.uuid) {
                 return {
                     statusCode: 403,
@@ -155,7 +150,6 @@ export class TicketsService {
             }
         }
 
-        // Validar transiciones de estado según regla de negocio
         const validTransitions: Record<TicketStatus, TicketStatus[]> = {
             [TicketStatus.OPEN]: [TicketStatus.IN_PROGRESS],
             [TicketStatus.IN_PROGRESS]: [TicketStatus.CLOSED],
@@ -174,7 +168,6 @@ export class TicketsService {
         }
 
         try {
-            // Actualizar solo el status del ticket
             await this.ticketRepository
                 .createQueryBuilder('ticket')
                 .update()
@@ -185,7 +178,6 @@ export class TicketsService {
                 .where('uuid = :id', { id })
                 .execute();
 
-            // Registrar en historial
             const historyEntry = this.historyRepository.create({
                 modifierUser: { uuid: currentUser.uuid } as any,
                 ticketUuid: id,
@@ -196,7 +188,6 @@ export class TicketsService {
 
             await this.historyRepository.save(historyEntry);
 
-            // Retornar ticket actualizado
             return {
                 statusCode: 200,
                 editedTicket: {
@@ -222,6 +213,38 @@ export class TicketsService {
     }
 
     async editTicket(id: string, payload: EditTicketDto, currentUser: AuthenticatedUser) {
+        const currentTicket = await this.ticketRepository
+            .createQueryBuilder('ticket')
+            .leftJoinAndSelect('ticket.assignedTo', 'assignedTo')
+            .where('ticket.uuid = :id', { id })
+            .getOne();
+
+        if (!currentTicket) {
+            return {
+                statusCode: 404,
+                error: 'No encontrado',
+                message: `El ticket con uuid ${id} no existe.`,
+            };
+        }
+
+        if (currentUser.role === UserRole.AGENT) {
+            if (currentTicket.assignedTo?.uuid !== currentUser.uuid) {
+                return {
+                    statusCode: 403,
+                    error: 'Acceso denegado',
+                    message: 'No cuentas con los permisos necesarios para editar este recurso.',
+                };
+            }
+
+            if (payload.assignedToUuid !== undefined) {
+                return {
+                    statusCode: 403,
+                    error: 'Acceso denegado',
+                    message: 'Los agentes no pueden reasignar tickets.',
+                };
+            }
+        }
+
         const ticket = await this.ticketRepository
             .createQueryBuilder()
             .update(Ticket)
