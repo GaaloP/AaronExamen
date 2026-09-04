@@ -198,6 +198,7 @@ export const {
   setSelectedTicketByUuid,
   clearSelectedTicket,
   resetCreateStatus,
+  updateTicket,
 } = ticketSlice.actions;
 
 export default ticketSlice.reducer;
