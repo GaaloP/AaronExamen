@@ -6,7 +6,6 @@ import Link from 'next/link'; // Importante para la navegación en Next.js
 import { Box, Typography, List, ListItemButton, ListItemIcon, ListItemText } from '@mui/material';
 import GridViewIcon from '@mui/icons-material/GridView';
 import EventNoteIcon from '@mui/icons-material/EventNote';
-import PersonIcon from '@mui/icons-material/Person';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../store/store';
 import { logout } from '../../features/auth/authSlice';
