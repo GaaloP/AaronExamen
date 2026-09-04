@@ -6,8 +6,8 @@ import Link from 'next/link';
 import { 
   Box, Typography, List, ListItemButton, ListItemIcon, ListItemText,
   Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  TablePagination, FormControl, InputLabel, Select, MenuItem, Chip, //todo lo que se agrego de muui
-  Button, Dialog, DialogTitle, DialogContent, DialogActions
+  TablePagination, FormControl, InputLabel, Select, MenuItem, Chip,
+  Button, Dialog, IconButton, DialogTitle, DialogContent, DialogActions
 } from '@mui/material';
 import GridViewIcon from '@mui/icons-material/GridView';
 import EventNoteIcon from '@mui/icons-material/EventNote';
@@ -16,6 +16,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../store/store';
 import { logout } from '../../features/auth/authSlice';
 import { setFilter, setPage, setLimit } from '../../features/auth/ticketSlice';
+import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
 
 function capitalize(value: string): string {
   if (!value) return '';
@@ -85,9 +87,7 @@ export default function TicketsPage() {
         </List>
       </Box>
 
-      {/* contenido principal */}
       <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', bgcolor: '#f5f5f5' }}>
-        {/* barra o layout superior */}
         <Box
           sx={{
             height: 56,
@@ -111,24 +111,36 @@ export default function TicketsPage() {
         </Box>
 
         <Box sx={{ p: 4 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-            <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#1e2a3a' }}>
-              Gestión de Tickets
-            </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+              <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#1e2a3a' }}>
+                Gestión de Tickets
+              </Typography>
 
-            <FormControl size="small" sx={{ minWidth: 150 }}>
-              <InputLabel>Estado</InputLabel>
-              <Select
-                value={filter}
-                label="Estado"
-                onChange={(e) => dispatch(setFilter(e.target.value))}
-              >
-                <MenuItem value="Todos">Todos</MenuItem>
-                <MenuItem value="Abierto">Abiertos</MenuItem>
-                <MenuItem value="En progreso">En Progreso</MenuItem>
-                <MenuItem value="Cerrado">Cerrados</MenuItem>
-              </Select>
-            </FormControl>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <FormControl size="small" sx={{ minWidth: 150 }}>
+                  <InputLabel>Estado</InputLabel>
+                  <Select
+                    value={filter}
+                    label="Estado"
+                    onChange={(e) => dispatch(setFilter(e.target.value))}
+                  >
+                    <MenuItem value="Todos">Todos</MenuItem>
+                    <MenuItem value="Abierto">Abiertos</MenuItem>
+                    <MenuItem value="En progreso">En Progreso</MenuItem>
+                    <MenuItem value="Cerrado">Cerrados</MenuItem>
+                  </Select>
+                </FormControl>
+
+                <Button
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  component={Link}
+                  href="/tickets/new"
+                  sx={{ textTransform: 'none' }}
+                >
+                  Crear ticket
+                </Button>
+              </Box>
           </Box>
 
           <Paper elevation={0} sx={{ borderRadius: 2, overflow: 'hidden' }}>
@@ -169,6 +181,14 @@ export default function TicketsPage() {
                           >
                             Historial
                           </Button>
+                           <IconButton
+                            size="small"
+                            sx={{ ml: 1 }}
+                            disabled={ticket.status === 'Cerrado' || (user.role === 'agente' && ticket.assignedTo?.uuid !== user.uuid)}
+                            onClick={() => router.push(`/tickets/${ticket.uuid}/edit`)}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
                         </TableCell>
                       </TableRow>
                     ))

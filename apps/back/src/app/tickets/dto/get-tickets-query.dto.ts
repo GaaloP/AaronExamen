@@ -2,7 +2,7 @@ import { Type } from 'class-transformer';
 import { IsEnum, IsInt, IsOptional, Min } from 'class-validator';
 import { TicketStatus } from '../entities/ticket.entity';
 
-export class GetTicketsQueryDto {
+export class GetPaginatedTicketsDto {
     @IsOptional()
     @Type(() => Number)
     @IsInt({ message: 'page debe ser un número entero' })

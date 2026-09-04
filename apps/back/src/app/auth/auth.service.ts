@@ -18,18 +18,12 @@ export class AuthService {
             where: { email: dto.email },
         });
 
-        if (!user) {
-            throw new UnauthorizedException('Las credenciales son incorrectas');
-        }
+        if (!user) throw new UnauthorizedException('Las credenciales son incorrectas');
 
-        if (!user.password) {
-            throw new UnauthorizedException('Las credenciales son incorrectas');
-        }
+        if (!user.password) throw new UnauthorizedException('Las credenciales son incorrectas');
 
         const isPasswordValid = await bcrypt.compare(dto.password, user.password);
-        if (!isPasswordValid) {
-            throw new UnauthorizedException('Las credenciales son incorrectas');
-        }
+        if (!isPasswordValid) throw new UnauthorizedException('Las credenciales son incorrectas');
 
         const payload = { sub: user.uuid, email: user.email, role: user.role };
         const expiresIn = 3600;
