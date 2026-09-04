@@ -156,6 +156,12 @@ const ticketSlice = createSlice({
       state.createStatus = 'idle';
       state.createErrorMessage = null;
     },
+    updateTicket: (state, action: PayloadAction<{ uuid: string; changes: Partial<Ticket> }>) => {
+      const idx = state.list.findIndex((t) => t.uuid === action.payload.uuid);
+      if (idx !== -1) {
+        state.list[idx] = { ...state.list[idx], ...action.payload.changes };
+      }
+    } 
   },
   extraReducers: (builder) => {
     builder
@@ -192,6 +198,7 @@ export const {
   setSelectedTicketByUuid,
   clearSelectedTicket,
   resetCreateStatus,
+  updateTicket,
 } = ticketSlice.actions;
 
 export default ticketSlice.reducer;

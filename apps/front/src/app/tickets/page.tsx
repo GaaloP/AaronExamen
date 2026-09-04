@@ -7,7 +7,7 @@ import {
   Box, Typography, List, ListItemButton, ListItemIcon, ListItemText,
   Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   TablePagination, FormControl, InputLabel, Select, MenuItem, Chip,
-  Button, Dialog, DialogTitle, DialogContent, DialogActions
+  Button, Dialog, IconButton, DialogTitle, DialogContent, DialogActions
 } from '@mui/material';
 import GridViewIcon from '@mui/icons-material/GridView';
 import EventNoteIcon from '@mui/icons-material/EventNote';
@@ -17,6 +17,7 @@ import { AppDispatch, RootState } from '../../store/store';
 import { logout } from '../../features/auth/authSlice';
 import { setFilter, setPage, setLimit } from '../../features/auth/ticketSlice';
 import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
 
 function capitalize(value: string): string {
   if (!value) return '';
@@ -180,6 +181,14 @@ export default function TicketsPage() {
                           >
                             Historial
                           </Button>
+                           <IconButton
+                            size="small"
+                            sx={{ ml: 1 }}
+                            disabled={ticket.status === 'Cerrado' || (user.role === 'agente' && ticket.assignedTo?.uuid !== user.uuid)}
+                            onClick={() => router.push(`/tickets/${ticket.uuid}/edit`)}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
                         </TableCell>
                       </TableRow>
                     ))
