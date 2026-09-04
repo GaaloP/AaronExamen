@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { TicketsModule } from './tickets/tickets.module';
 import { UsersModule } from './users/users.module';
 import { MetricsModule } from './metrics/metrics.module';
+import { AgentsModule } from './agents/agents.module';
 
 @Module({
   controllers: [AppController],
@@ -30,7 +31,8 @@ import { MetricsModule } from './metrics/metrics.module';
     AuthModule,
     TicketsModule,
     UsersModule,
-    MetricsModule
+    MetricsModule,
+    AgentsModule
   ],
 })
 export class AppModule { }
