@@ -142,8 +142,10 @@ export class TicketsService {
 
         const validTransitions: Record<TicketStatus, TicketStatus[]> = {
             [TicketStatus.OPEN]: [TicketStatus.IN_PROGRESS],
-            [TicketStatus.IN_PROGRESS]: [TicketStatus.CLOSED],
-            [TicketStatus.CLOSED]: [],
+            [TicketStatus.IN_PROGRESS]: [TicketStatus.CLOSED, TicketStatus.OPEN],
+            [TicketStatus.CLOSED]: currentUser.role === UserRole.SUPERVISOR
+                ? [TicketStatus.IN_PROGRESS]
+                : [],
         };
 
         const currentStatus = ticket.status as TicketStatus;
@@ -159,7 +161,7 @@ export class TicketsService {
                 .update()
                 .set({
                     status: newStatus,
-                    closedAt: newStatus === TicketStatus.CLOSED ? new Date() : null
+                    closedAt: newStatus === TicketStatus.CLOSED ? new Date() : null,
                 })
                 .where('uuid = :id', { id })
                 .execute();
@@ -236,11 +238,12 @@ export class TicketsService {
             .getOne();
 
         const historyEntry = this.historyRepository.create({
-            date: ticketActualizado?.createdAt,
-            modifierUser: { uuid: ticketActualizado?.createdBy?.uuid } as any,
+            date: new Date(),
+            modifierUser: { uuid: currentUser.uuid } as any,
             ticketUuid: id,
+            lastState: currentTicket.status,
             actualState: ticketActualizado?.status as TicketStatus,
-            comment: payload.comment || 'Se creo el ticket',
+            comment: payload.comment || 'Ticket actualizado',
         });
 
         await this.historyRepository.save(historyEntry);
@@ -288,7 +291,7 @@ export class TicketsService {
         const savedTicket = await this.ticketRepository.save(newTicket);
 
         const historyEntry = this.historyRepository.create({
-            date: new Date(),
+            date: savedTicket.createdAt,
             modifierUser: { uuid: currentUser.uuid } as any,
             ticketUuid: savedTicket.uuid,
             actualState: TicketStatus.OPEN,
